@@ -1,0 +1,3 @@
+.chips {
+  row-gap: var(--mantine-spacing-xs);
+}

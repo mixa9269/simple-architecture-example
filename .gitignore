@@ -1,4 +1,19 @@
+# Course materials (local only)
 course-materials/
-.DS_Store
+
+# Dependencies & build
 node_modules/
 dist/
+dist-ssr/
+coverage/
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store

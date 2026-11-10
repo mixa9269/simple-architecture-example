@@ -1,0 +1,17 @@
+:root {
+  --app-bg-gradient:
+    radial-gradient(1200px 600px at 10% -10%, rgba(190, 75, 219, 0.22), transparent 60%),
+    radial-gradient(900px 500px at 110% 0%, rgba(76, 110, 245, 0.18), transparent 60%);
+  --app-title-gradient: linear-gradient(120deg, #f3d9fa 0%, #da77f2 45%, #748ffc 100%);
+  --app-card-bg: rgba(255, 255, 255, 0.03);
+  --app-card-border: rgba(255, 255, 255, 0.08);
+  --app-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --app-card-shadow-hover: 0 18px 44px rgba(0, 0, 0, 0.55);
+  --app-poster-placeholder: linear-gradient(135deg, #2b2140 0%, #1b2440 100%);
+}
+
+body {
+  min-height: 100vh;
+  background-image: var(--app-bg-gradient);
+  background-attachment: fixed;
+}
