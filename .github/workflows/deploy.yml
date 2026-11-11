@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # feature/hw-01: preview until PR #1 is merged, then drop it
+    branches: [main, feature/hw-01]
   workflow_dispatch:
 
 permissions:
