@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSearchStatus } from './getSearchStatus';
+import { getShownResult } from './getShownResult';
 import { searchShows } from './searchShows';
-import type { SearchResult, Show } from './types';
-import { useDebouncedValue } from './useDebouncedValue';
+import type { SearchResult } from './types';
+import { useDebouncedQuery } from './useDebouncedQuery';
 
 export const SEARCH_DEBOUNCE_MS = 400;
-
-const NO_SHOWS: Show[] = [];
+export const FIRST_RESULT_ID = 1;
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong';
@@ -16,28 +16,33 @@ function getErrorMessage(error: unknown): string {
  * Searches TVmaze as the user types:
  * debounces the query, cancels outdated requests and exposes loading/error state.
  */
-export function useShowsSearch() {
-  const [query, setQuery] = useState('');
+export function useShowsSearch(initialQuery: string) {
+  const [query, setQuery] = useState(initialQuery);
   const [retryCount, setRetryCount] = useState(0);
   const [result, setResult] = useState<SearchResult | null>(null);
+  const lastResultId = useRef(FIRST_RESULT_ID - 1);
 
   const trimmedQuery = query.trim();
-  const debouncedQuery = useDebouncedValue(trimmedQuery, SEARCH_DEBOUNCE_MS);
+  const debouncedQuery = useDebouncedQuery(trimmedQuery, SEARCH_DEBOUNCE_MS);
   const requestKey = `${debouncedQuery}#${retryCount}`;
+
+  // An emptied field drops the answer: the next query loads with skeletons, not with old shows.
+  if (!trimmedQuery && result) setResult(null);
 
   useEffect(() => {
     if (!debouncedQuery) return;
 
     const controller = new AbortController();
-    const key = `${debouncedQuery}#${retryCount}`;
+    const base = { key: `${debouncedQuery}#${retryCount}`, query: debouncedQuery };
+    const settle = (answer: Pick<SearchResult, 'shows' | 'error'>) => {
+      if (controller.signal.aborted) return;
+      lastResultId.current += 1;
+      setResult({ id: lastResultId.current, ...base, ...answer });
+    };
 
     searchShows(debouncedQuery, controller.signal)
-      .then((shows) => {
-        if (!controller.signal.aborted) setResult({ key, shows, error: null });
-      })
-      .catch((error: unknown) => {
-        if (!controller.signal.aborted) setResult({ key, shows: [], error: getErrorMessage(error) });
-      });
+      .then((shows) => settle({ shows, error: null }))
+      .catch((error: unknown) => settle({ shows: [], error: getErrorMessage(error) }));
 
     return () => controller.abort();
   }, [debouncedQuery, retryCount]);
@@ -51,8 +56,8 @@ export function useShowsSearch() {
     trimmedQuery,
     setQuery,
     status,
-    shows: status === 'success' && result ? result.shows : NO_SHOWS,
-    error: status === 'error' ? result?.error ?? null : null,
+    shownResult: getShownResult(status, result),
+    error: status === 'error' ? (result?.error ?? null) : null,
     retry,
   };
 }

@@ -27,7 +27,7 @@ ShowsExplorer/
   ShowsExplorer.tsx      (35 lines)
   usePresenter.ts        (30 lines)
   useShowsSearch.ts      (60 lines)
-  useGenreFilter.ts      (40 lines)
+  useSearchSelection.ts  (40 lines)
   collectGenres.ts       (12 lines)
 ```
 

@@ -1,4 +1,4 @@
-import type { Show, TvmazeSearchItem, TvmazeShow } from './types';
+import type { SearchResult, Show, TvmazeSearchItem, TvmazeShow } from './types';
 
 export function makeShow(overrides: Partial<Show> = {}): Show {
   return {
@@ -28,6 +28,20 @@ export function makeTvmazeShow(overrides: Partial<TvmazeShow> = {}): TvmazeShow 
   };
 }
 
-export function makeSearchItem(id: number, name: string): TvmazeSearchItem {
-  return { score: 1, show: makeTvmazeShow({ id, name }) };
+export function makeSearchItem(
+  id: number,
+  name: string,
+  genres: string[] = ['Drama', 'Crime'],
+): TvmazeSearchItem {
+  return { score: 1, show: makeTvmazeShow({ id, name, genres }) };
 }
+
+export function makeResult(overrides: Partial<SearchResult> = {}): SearchResult {
+  return { id: 1, key: 'murder#0', query: 'murder', shows: [], error: null, ...overrides };
+}
+
+export const okResponse = (items: unknown[]) =>
+  ({ ok: true, status: 200, json: async () => items }) as Response;
+
+export const errorResponse = (status: number) =>
+  ({ ok: false, status, json: async () => ({}) }) as Response;

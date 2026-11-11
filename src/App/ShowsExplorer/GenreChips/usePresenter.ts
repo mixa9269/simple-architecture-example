@@ -1,12 +1,10 @@
-export interface GenreChipsProps {
-  genres: string[];
-  selectedGenre: string | null;
-  onChange: (genre: string | null) => void;
-}
+import type { GenreChipsProps } from './types';
 
 const ALL_GENRES = '__all__';
 
-export function usePresenter({ genres, selectedGenre, onChange }: GenreChipsProps) {
+export function usePresenter(props: GenreChipsProps) {
+  const { genres, selectedGenre, onChange } = props;
+
   return {
     items: [
       { value: ALL_GENRES, label: 'All' },

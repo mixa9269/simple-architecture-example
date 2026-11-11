@@ -1,18 +1,15 @@
-import { PAGE_SIZE } from '../paginate';
-import type { Show } from '../types';
-
-export interface ShowsListProps {
-  shows: Show[];
-  isLoading: boolean;
-}
+import { PAGE_SIZE } from '@/App/ShowsExplorer/paginate';
+import type { ShowsListProps } from './types';
 
 const SKELETON_KEYS = Array.from({ length: PAGE_SIZE }, (_, index) => `skeleton-${index}`);
 
-export function usePresenter({ shows, isLoading }: ShowsListProps) {
+export function usePresenter(props: ShowsListProps) {
+  const { shows, showSkeleton } = props;
+
   return {
     shows,
-    isLoading,
+    showSkeleton,
     skeletonKeys: SKELETON_KEYS,
-    isHidden: !isLoading && shows.length === 0,
+    isHidden: !showSkeleton && shows.length === 0,
   };
 }

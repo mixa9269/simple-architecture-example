@@ -6,24 +6,34 @@ paths:
 
 # View layer: JSX + `usePresenter` only
 
-Every React component is the **View** layer. It contains exactly two things: a call to its own `usePresenter()` hook and JSX. No other JS logic — no `useState`/`useEffect`/other hooks, no computations, no handlers with bodies, no data fetching.
+Every React component is the **View** layer. It contains exactly two things: a call to its own `usePresenter(props)` hook and JSX. No other JS logic — no `useState`/`useEffect`/other hooks, no computations, no handlers with bodies, no data fetching.
+
+## Props: whole object in, whole object on
+
+- The component takes `props` typed by `<Name>Props` from its own `./types.ts` — never destructured in the signature.
+- It passes `props` whole to the presenter: `usePresenter(props)`. A component without props has no `types.ts` and calls `usePresenter()`.
+- The View reads values only from what `usePresenter` returns, not from `props` directly.
+
+ESLint: destructured component params and `usePresenter(anythingButProps)` are errors.
 
 ## Allowed imports in a View file
 
 - its own `./usePresenter`
+- its own `./types` (`import type { <Name>Props } from './types'`)
 - its own `./styles.module.css`
-- child components (nested folders or `components/` above in the tree)
-- types (`import type ...`)
+- child components (nested folders, or `components/` above in the tree via `@/`)
+- UI-library components (Mantine)
 
 ## Good
 
 ```tsx
-import { usePresenter } from './usePresenter';
 import { ShowCard } from './ShowCard/ShowCard';
 import styles from './styles.module.css';
+import type { ShowsListProps } from './types';
+import { usePresenter } from './usePresenter';
 
-export function ShowsList() {
-  const { shows, isEmpty } = usePresenter();
+export function ShowsList(props: ShowsListProps) {
+  const { shows, isEmpty } = usePresenter(props);
 
   if (isEmpty) return <p className={styles.empty}>Nothing found</p>;
 
@@ -44,7 +54,7 @@ Simple expressions needed to render (`map`, ternaries, passing a handler `onClic
 ```tsx
 import { useEffect, useState } from 'react';
 
-export function ShowsList({ query }: { query: string }) {
+export function ShowsList({ query }: { query: string }) { // destructured, inline props type
   const [shows, setShows] = useState<Show[]>([]);   // state in View
   useEffect(() => {                                  // side effect in View
     fetch(`https://api.tvmaze.com/search/shows?q=${query}`)

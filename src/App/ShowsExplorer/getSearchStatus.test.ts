@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { getSearchStatus } from './getSearchStatus';
+import { makeResult } from './testFixtures';
 
-const success = { key: 'murder#0', shows: [], error: null };
-const failure = { key: 'murder#0', shows: [], error: 'boom' };
+const success = makeResult();
+const failure = makeResult({ error: 'boom' });
 
 describe('getSearchStatus', () => {
   it('is idle for an empty query', () => {

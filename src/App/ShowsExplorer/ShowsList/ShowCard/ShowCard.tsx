@@ -1,6 +1,7 @@
 import { Anchor, Badge, Card, Group, Image, Text, Title } from '@mantine/core';
 import styles from './styles.module.css';
-import { usePresenter, type ShowCardProps } from './usePresenter';
+import type { ShowCardProps } from './types';
+import { usePresenter } from './usePresenter';
 
 export function ShowCard(props: ShowCardProps) {
   const { name, url, imageUrl, meta, genres, summary } = usePresenter(props);

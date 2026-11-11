@@ -1,48 +1,60 @@
-import { useGenreFilter } from './useGenreFilter';
-import { usePagination } from './usePagination';
+import { useMemo } from 'react';
+import { buildResultsView } from './buildResultsView';
+import { getUrlState } from './searchUrl';
+import type { Show } from './types';
+import { useSearchSelection } from './useSearchSelection';
+import { useInitialSearchUrl, useSearchUrlSync } from './useSearchUrl';
 import { useShowsSearch } from './useShowsSearch';
 
+const NO_SHOWS: Show[] = [];
+
 export function usePresenter() {
-  const search = useShowsSearch();
-  const genre = useGenreFilter(search.shows);
-  const pagination = usePagination(genre.filteredShows);
+  const initial = useInitialSearchUrl();
+  const search = useShowsSearch(initial.query);
+  const shown = search.shownResult;
+  const selection = useSearchSelection(shown, initial);
+  const shows = shown?.shows ?? NO_SHOWS;
+  const view = useMemo(
+    () => buildResultsView(shows, selection.genre, selection.page),
+    [shows, selection.genre, selection.page],
+  );
 
-  const onQueryChange = (value: string) => {
-    search.setQuery(value);
-    genre.reset();
-    pagination.reset();
-  };
+  useSearchUrlSync(
+    getUrlState(search.status, {
+      query: search.trimmedQuery,
+      genre: view.activeGenre,
+      page: view.page,
+    }),
+  );
 
-  const onGenreChange = (value: string | null) => {
-    genre.select(value);
-    pagination.reset();
-  };
-
-  const hasResults = search.status === 'success' && search.shows.length > 0;
+  const isLoading = search.status === 'loading';
+  const hasResults = shows.length > 0;
 
   return {
     query: search.query,
-    trimmedQuery: search.trimmedQuery,
-    isLoading: search.status === 'loading',
-    onQueryChange,
-    onQueryClear: () => onQueryChange(''),
+    isLoading,
+    onQueryChange: search.setQuery,
+    onQueryClear: () => search.setQuery(''),
 
     status: search.status,
+    // The query of the shown results, not of the one being typed.
+    resultsQuery: shown?.query ?? search.trimmedQuery,
     error: search.error,
     onRetry: search.retry,
-    totalCount: search.shows.length,
-    filteredCount: genre.filteredShows.length,
+    totalCount: shows.length,
+    filteredCount: view.filteredShows.length,
 
-    showGenres: hasResults && genre.genres.length > 0,
-    genres: genre.genres,
-    selectedGenre: genre.selectedGenre,
-    onGenreChange,
+    showGenres: hasResults && view.genres.length > 0,
+    genres: view.genres,
+    selectedGenre: view.activeGenre,
+    onGenreChange: selection.selectGenre,
 
-    shows: pagination.pageItems,
+    shows: view.pageItems,
+    showSkeleton: isLoading && !hasResults,
 
-    showPagination: hasResults && pagination.totalPages > 1,
-    page: pagination.page,
-    totalPages: pagination.totalPages,
-    onPageChange: pagination.setPage,
+    showPagination: hasResults && view.totalPages > 1,
+    page: view.page,
+    totalPages: view.totalPages,
+    onPageChange: selection.setPage,
   };
 }

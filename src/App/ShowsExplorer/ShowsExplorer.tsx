@@ -9,11 +9,11 @@ import { usePresenter } from './usePresenter';
 export function ShowsExplorer() {
   const {
     query,
-    trimmedQuery,
     isLoading,
     onQueryChange,
     onQueryClear,
     status,
+    resultsQuery,
     error,
     onRetry,
     totalCount,
@@ -23,6 +23,7 @@ export function ShowsExplorer() {
     selectedGenre,
     onGenreChange,
     shows,
+    showSkeleton,
     showPagination,
     page,
     totalPages,
@@ -40,7 +41,7 @@ export function ShowsExplorer() {
 
       <ResultsStatus
         status={status}
-        query={trimmedQuery}
+        query={resultsQuery}
         error={error}
         totalCount={totalCount}
         filteredCount={filteredCount}
@@ -52,7 +53,7 @@ export function ShowsExplorer() {
         <GenreChips genres={genres} selectedGenre={selectedGenre} onChange={onGenreChange} />
       )}
 
-      <ShowsList shows={shows} isLoading={isLoading} />
+      <ShowsList shows={shows} showSkeleton={showSkeleton} />
 
       {showPagination && (
         <div className={styles.pagination}>

@@ -1,11 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeSearchItem } from './testFixtures';
+import { errorResponse, makeSearchItem, okResponse } from './testFixtures';
 import { SEARCH_DEBOUNCE_MS, useShowsSearch } from './useShowsSearch';
-
-const okResponse = (items: unknown[]) =>
-  ({ ok: true, status: 200, json: async () => items }) as Response;
-const errorResponse = (status: number) => ({ ok: false, status, json: async () => ({}) }) as Response;
 
 async function flushDebounce() {
   await act(async () => {
@@ -13,9 +9,9 @@ async function flushDebounce() {
   });
 }
 
-function renderSearch() {
-  return renderHook(() => useShowsSearch());
-}
+const renderSearch = () => renderHook(() => useShowsSearch(''));
+const shownNames = (shown: { shows: { name: string }[] } | null) =>
+  shown?.shows.map((show) => show.name);
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -42,7 +38,7 @@ describe('useShowsSearch', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain('q=murder');
     expect(result.current.status).toBe('success');
-    expect(result.current.shows.map((show) => show.name)).toEqual(['Murder']);
+    expect(shownNames(result.current.shownResult)).toEqual(['Murder']);
   });
 
   it('aborts the previous request when the query changes', async () => {
@@ -76,7 +72,7 @@ describe('useShowsSearch', () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(result.current.status).toBe('idle');
-    expect(result.current.shows).toEqual([]);
+    expect(result.current.shownResult).toBeNull();
   });
 
   it('reports an error and recovers on retry', async () => {
@@ -98,5 +94,23 @@ describe('useShowsSearch', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(result.current.status).toBe('success');
+  });
+
+  it('sends the query again when it is typed back after the field was emptied', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(okResponse([makeSearchItem(3, 'Dark')]));
+    vi.stubGlobal('fetch', fetchMock);
+    const { result } = renderSearch();
+
+    act(() => result.current.setQuery('dark'));
+    await flushDebounce();
+    act(() => result.current.setQuery(''));
+    expect(result.current.shownResult).toBeNull();
+
+    act(() => result.current.setQuery('dark'));
+    expect(result.current.shownResult).toBeNull(); // skeletons, not the dropped answer
+    await flushDebounce();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(shownNames(result.current.shownResult)).toEqual(['Dark']);
   });
 });

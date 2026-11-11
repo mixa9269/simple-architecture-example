@@ -1,22 +1,12 @@
-import type { SearchStatus } from '../types';
+import type { SearchStatus } from '@/App/ShowsExplorer/types';
 import { formatSummary } from './formatSummary';
+import type { ResultsStatusProps, ResultsStatusVariant } from './types';
 
-export interface ResultsStatusProps {
-  status: SearchStatus;
-  query: string;
-  error: string | null;
-  totalCount: number;
-  filteredCount: number;
-  selectedGenre: string | null;
-  onRetry: () => void;
-}
-
-type Variant = 'none' | 'error' | 'empty' | 'summary';
-
-function getVariant(status: SearchStatus, totalCount: number): Variant {
+function getVariant(status: SearchStatus, totalCount: number): ResultsStatusVariant {
   if (status === 'error') return 'error';
-  if (status !== 'success') return 'none';
-  return totalCount === 0 ? 'empty' : 'summary';
+  // Shown results keep their summary while the next query loads.
+  if (totalCount > 0) return 'summary';
+  return status === 'success' ? 'empty' : 'none';
 }
 
 export function usePresenter(props: ResultsStatusProps) {

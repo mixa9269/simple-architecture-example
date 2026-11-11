@@ -12,8 +12,11 @@ export interface Show {
 export type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export interface SearchResult {
+  /** Unique per received answer, starting at FIRST_RESULT_ID */
+  id: number;
   /** `${query}#${retryCount}` of the request that produced this result */
   key: string;
+  query: string;
   shows: Show[];
   error: string | null;
 }
