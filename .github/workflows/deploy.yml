@@ -2,8 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    # feature/hw-01: preview until PR #1 is merged, then drop it
-    branches: [main, feature/hw-01]
+    # Every branch deploys to the one Pages site: the last pushed branch is live.
+    branches: ['**']
   workflow_dispatch:
 
 permissions:
