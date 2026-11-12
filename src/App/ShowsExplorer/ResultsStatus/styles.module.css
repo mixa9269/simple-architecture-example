@@ -1,0 +1,9 @@
+.alert {
+  border: 1px solid rgba(250, 82, 82, 0.35);
+}
+
+.empty {
+  padding: var(--mantine-spacing-xl) 0;
+  text-align: center;
+  font-size: var(--mantine-font-size-lg);
+}

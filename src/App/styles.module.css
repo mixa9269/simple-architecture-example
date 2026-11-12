@@ -1,0 +1,18 @@
+.app {
+  padding-block: calc(var(--mantine-spacing-xl) * 2);
+}
+
+.header {
+  margin-bottom: var(--mantine-spacing-xl);
+  text-align: center;
+}
+
+.title {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--app-title-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
