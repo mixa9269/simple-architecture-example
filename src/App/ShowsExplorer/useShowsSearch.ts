@@ -1,63 +1,59 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getSearchStatus } from './getSearchStatus';
-import { getShownResult } from './getShownResult';
+import { getShownAnswer } from './getShownAnswer';
 import { searchShows } from './searchShows';
-import type { SearchResult } from './types';
-import { useDebouncedQuery } from './useDebouncedQuery';
-
-export const SEARCH_DEBOUNCE_MS = 400;
-export const FIRST_RESULT_ID = 1;
+import type { SearchAnswer } from './types';
+import { useSearchQuery } from './useSearchQuery';
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Something went wrong';
 }
 
 /**
- * Searches TVmaze as the user types:
- * debounces the query, cancels outdated requests and exposes loading/error state.
+ * Searches TVmaze as the user types.
+ * The effect loads the current request; AbortController cancels the outdated one.
  */
 export function useShowsSearch(initialQuery: string) {
-  const [query, setQuery] = useState(initialQuery);
-  const [retryCount, setRetryCount] = useState(0);
-  const [result, setResult] = useState<SearchResult | null>(null);
-  const lastResultId = useRef(FIRST_RESULT_ID - 1);
-
-  const trimmedQuery = query.trim();
-  const debouncedQuery = useDebouncedQuery(trimmedQuery, SEARCH_DEBOUNCE_MS);
-  const requestKey = `${debouncedQuery}#${retryCount}`;
-
-  // An emptied field drops the answer: the next query loads with skeletons, not with old shows.
-  if (!trimmedQuery && result) setResult(null);
+  const search = useSearchQuery(initialQuery);
+  const { request } = search;
+  const [answer, setAnswer] = useState<SearchAnswer | null>(null);
 
   useEffect(() => {
-    if (!debouncedQuery) return;
+    if (!request) return;
 
     const controller = new AbortController();
-    const base = { key: `${debouncedQuery}#${retryCount}`, query: debouncedQuery };
-    const settle = (answer: Pick<SearchResult, 'shows' | 'error'>) => {
-      if (controller.signal.aborted) return;
-      lastResultId.current += 1;
-      setResult({ id: lastResultId.current, ...base, ...answer });
+    const settle = (shows: SearchAnswer['shows'], error: string | null) => {
+      if (!controller.signal.aborted) setAnswer({ request, shows, error });
     };
 
-    searchShows(debouncedQuery, controller.signal)
-      .then((shows) => settle({ shows, error: null }))
-      .catch((error: unknown) => settle({ shows: [], error: getErrorMessage(error) }));
+    searchShows(request.query, controller.signal)
+      .then((shows) => settle(shows, null))
+      .catch((error: unknown) => settle([], getErrorMessage(error)));
 
     return () => controller.abort();
-  }, [debouncedQuery, retryCount]);
+  }, [request]);
 
-  const retry = useCallback(() => setRetryCount((count) => count + 1), []);
+  const { changeQuery: commitQuery } = search;
+  // An emptied field also drops the answer: the next query loads with skeletons, not with old shows.
+  const changeQuery = useCallback(
+    (value: string) => {
+      commitQuery(value);
+      if (!value.trim()) setAnswer(null);
+    },
+    [commitQuery],
+  );
 
-  const status = getSearchStatus(trimmedQuery, debouncedQuery, requestKey, result);
+  const trimmedQuery = search.query.trim();
+  const status = getSearchStatus(trimmedQuery, request, answer);
 
   return {
-    query,
+    query: search.query,
     trimmedQuery,
-    setQuery,
+    request,
+    changeQuery,
     status,
-    shownResult: getShownResult(status, result),
-    error: status === 'error' ? (result?.error ?? null) : null,
-    retry,
+    shownAnswer: getShownAnswer(status, answer),
+    error: status === 'error' ? (answer?.error ?? null) : null,
+    retry: search.retry,
   };
 }

@@ -1,7 +1,7 @@
 import { useRef, type ChangeEvent } from 'react';
-import type { SearchInputProps } from './types';
+import type { Props } from './types';
 
-export function usePresenter(props: SearchInputProps) {
+export function usePresenter(props: Props) {
   const { value, isLoading, onChange, onClear } = props;
   const inputRef = useRef<HTMLInputElement>(null);
 

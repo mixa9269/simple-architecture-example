@@ -12,14 +12,14 @@ Lesson 1 covers only **View** and **Presenter**. Interactor, Entity and Router c
 
 | Rule | File |
 |---|---|
-| A component is View only: JSX + `usePresenter(props)` | `sa-view-layer.md` |
-| All logic lives in `usePresenter` and smaller hooks/functions; it takes props whole | `sa-presenter-layer.md` |
+| A component is View only: JSX + `usePresenter(props)`; no logic → no presenter, texts right in JSX | `sa-view-layer.md` |
+| All logic lives in `usePresenter` and smaller hooks/functions; it takes props whole; no `setState` in render, requests as objects + `AbortController` | `sa-presenter-layer.md` |
 | Max **120 lines** per file (ESLint `max-lines`) | `sa-file-size-120.md` |
-| Each component has its own folder (View, `usePresenter.ts`, `types.ts` with `<Name>Props`, styles); single-use children nest inside the parent; folders mirror the UI | `sa-component-tree.md` |
-| Own folder and own children via `./`, anything further via `@/` (= `src/`), never `../` | `sa-imports.md` |
+| Each component has its own folder (View, `usePresenter.ts` if logic, `types.ts` with `Props`, one or more `*.module.css`); single-use children nest inside the parent; folders mirror the UI | `sa-component-tree.md` |
+| Own folder and own children via `./`, anything further via `~/` (= `src/`), never `../` | `sa-imports.md` |
 | `components/` folders hold reusable components only, used only below in the tree | `sa-reusable-components.md` |
 
-Styles: CSS Modules (`styles.module.css`) + CSS variables, no preprocessors.
+Styles: CSS Modules (`styles.module.css`, may be split into several `*.module.css` in one folder) + CSS variables, no preprocessors.
 
 ESLint enforcement: `eslint/simple-architecture.js` (already spread into `eslint.config.js`).
 
@@ -38,13 +38,14 @@ src/
   theme.ts                     # Mantine createTheme
   index.css                    # global CSS variables
   App/
-    App.tsx, usePresenter.ts, styles.module.css
+    App.tsx, styles.module.css   # static header — no presenter
     ShowsExplorer/
       ShowsExplorer.tsx, usePresenter.ts, styles.module.css
-      types.ts                 # domain types: Show, SearchResult, TVmaze API
-      useShowsSearch.ts        # debounce + fetch + AbortController + status
-      useDebouncedQuery.ts, getSearchStatus.ts, getShownResult.ts, searchShows.ts, mapShow.ts
-      useSearchSelection.ts    # genre + page, bound to one answer
+      types.ts                 # domain types: Show, SearchRequest, SearchAnswer, TVmaze API
+      useSearchQuery.ts        # field + debounce in the handler → request object, retry
+      useShowsSearch.ts        # loads the request (AbortController), answer, status
+      getSearchStatus.ts, getShownAnswer.ts, searchShows.ts, mapShow.ts
+      useSearchSelection.ts    # genre + page, bound to the request object
       buildResultsView.ts, collectGenres.ts, filterByGenre.ts, paginate.ts
       useSearchUrl.ts, searchUrl.ts   # ?q=&genre=&page=
       testFixtures.ts, presenterTestUtils.ts, *.test.ts
@@ -53,7 +54,7 @@ src/
       GenreChips/
       ShowsList/
         ShowCard/
-        ShowCardSkeleton/      # no props → no types.ts
+        ShowCardSkeleton/      # no props, no logic → only View + styles
 ```
 
 Tests (Vitest) live next to the code they cover. They test pure functions and hooks (`renderHook`, including presenters), not Mantine rendering.

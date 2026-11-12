@@ -1,8 +1,8 @@
-import type { GenreChipsProps } from './types';
+import type { Props } from './types';
 
 const ALL_GENRES = '__all__';
 
-export function usePresenter(props: GenreChipsProps) {
+export function usePresenter(props: Props) {
   const { genres, selectedGenre, onChange } = props;
 
   return {

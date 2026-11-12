@@ -11,8 +11,12 @@ const NO_SHOWS: Show[] = [];
 export function usePresenter() {
   const initial = useInitialSearchUrl();
   const search = useShowsSearch(initial.query);
-  const shown = search.shownResult;
-  const selection = useSearchSelection(shown, initial);
+  const shown = search.shownAnswer;
+  const selection = useSearchSelection(shown, {
+    request: search.request,
+    genre: initial.genre,
+    page: initial.page,
+  });
   const shows = shown?.shows ?? NO_SHOWS;
   const view = useMemo(
     () => buildResultsView(shows, selection.genre, selection.page),
@@ -33,12 +37,12 @@ export function usePresenter() {
   return {
     query: search.query,
     isLoading,
-    onQueryChange: search.setQuery,
-    onQueryClear: () => search.setQuery(''),
+    onQueryChange: search.changeQuery,
+    onQueryClear: () => search.changeQuery(''),
 
     status: search.status,
     // The query of the shown results, not of the one being typed.
-    resultsQuery: shown?.query ?? search.trimmedQuery,
+    resultsQuery: shown?.request.query ?? search.trimmedQuery,
     error: search.error,
     onRetry: search.retry,
     totalCount: shows.length,

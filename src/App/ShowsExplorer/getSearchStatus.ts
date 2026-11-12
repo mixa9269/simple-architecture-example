@@ -1,12 +1,14 @@
-import type { SearchResult, SearchStatus } from './types';
+import type { SearchAnswer, SearchRequest, SearchStatus } from './types';
 
+/** Loading until the field is committed as a request and the answer to that request arrives. */
 export function getSearchStatus(
-  query: string,
-  debouncedQuery: string,
-  requestKey: string,
-  result: SearchResult | null,
+  trimmedQuery: string,
+  request: SearchRequest | null,
+  answer: SearchAnswer | null,
 ): SearchStatus {
-  if (!query) return 'idle';
-  if (query !== debouncedQuery || !result || result.key !== requestKey) return 'loading';
-  return result.error ? 'error' : 'success';
+  if (!trimmedQuery) return 'idle';
+  if (!request || request.query !== trimmedQuery || !answer || answer.request !== request) {
+    return 'loading';
+  }
+  return answer.error ? 'error' : 'success';
 }

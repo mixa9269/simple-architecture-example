@@ -8,13 +8,13 @@ const VIEW_HINT =
   'Simple Architecture: move logic to usePresenter (see .claude/rules/sa-view-layer.md).';
 
 const PROPS_HINT =
-  'Simple Architecture: take props whole as `props: <Name>Props` and pass them on as usePresenter(props) (see .claude/rules/sa-presenter-layer.md).';
+  'Simple Architecture: take props whole as `props: Props` and pass them on as usePresenter(props) (see .claude/rules/sa-presenter-layer.md).';
 
-// Own folder and own children: './…'. Anything further up: '@/…' (see .claude/rules/sa-imports.md).
+// Own folder and own children: './…'. Anything further up: '~/…' (see .claude/rules/sa-imports.md).
 const PARENT_IMPORTS = {
   regex: '^\\.\\./',
   message:
-    "Simple Architecture: import from outside the own folder via '@/…' (see .claude/rules/sa-imports.md).",
+    "Simple Architecture: import from outside the own folder via '~/…' (see .claude/rules/sa-imports.md).",
 };
 
 const REACT_HOOKS = [

@@ -1,37 +1,31 @@
 import { useState } from 'react';
-import type { SearchResult } from './types';
-import { FIRST_RESULT_ID } from './useShowsSearch';
 import type { SearchUrlState } from './searchUrl';
+import type { SearchAnswer, SearchRequest } from './types';
 
 interface Selection {
-  resultId: number;
-  query: string;
+  request: SearchRequest | null;
   genre: string | null;
   page: number;
 }
 
 /**
- * Selected genre and page of the shown result.
- * A selection belongs to one answer: a new answer opens on page 1 with all genres,
- * while typing (and typing back) keeps the selection on screen.
- * The selection read from the URL applies to the first answer for the URL query.
+ * Selected genre and page of the shown answer, bound to its request object.
+ * A new request opens on page 1 with all genres; typing back keeps the request, and the selection.
+ * The selection read from the URL is bound to the initial request (the URL query).
  */
-export function useSearchSelection(shown: SearchResult | null, initial: SearchUrlState) {
-  const [selection, setSelection] = useState<Selection>(() => ({
-    resultId: FIRST_RESULT_ID,
-    query: initial.query,
-    genre: initial.genre,
-    page: initial.page,
-  }));
+export function useSearchSelection(
+  shown: SearchAnswer | null,
+  initial: Omit<SearchUrlState, 'query'> & { request: SearchRequest | null },
+) {
+  const [selection, setSelection] = useState<Selection>(initial);
 
-  const isCurrent =
-    shown !== null && selection.resultId === shown.id && selection.query === shown.query;
+  const isCurrent = shown !== null && shown.request === selection.request;
   const genre = isCurrent ? selection.genre : null;
   const page = isCurrent ? selection.page : 1;
 
   const update = (patch: Partial<Pick<Selection, 'genre' | 'page'>>) => {
     if (!shown) return;
-    setSelection({ resultId: shown.id, query: shown.query, genre, page, ...patch });
+    setSelection({ request: shown.request, genre, page, ...patch });
   };
 
   return {

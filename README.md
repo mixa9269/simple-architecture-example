@@ -30,10 +30,11 @@ npm run build
 
 Architecture rules for Claude Code live in [`.claude/rules`](.claude/rules):
 
-- View layer = JSX + `usePresenter(props)` only
+- View layer = JSX + `usePresenter(props)` only; a component without logic is plain JSX, no presenter
 - All component logic lives in `usePresenter` and smaller hooks; props are passed whole
-- `types.ts` with `<Name>Props` next to each component
-- Imports outside the own folder via `@/` (= `src/`), never `../`
+- No `setState` during render; requests are objects in state, cancelled with `AbortController`
+- `types.ts` with `Props` next to each component
+- Imports outside the own folder via `~/` (= `src/`), never `../`
 - Max 120 lines per file
 - Tree-shaped component folders that mirror the UI
 - `components/` folders hold reusable components only

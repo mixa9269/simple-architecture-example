@@ -1,7 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { errorResponse, makeSearchItem, okResponse } from './testFixtures';
-import { SEARCH_DEBOUNCE_MS, useShowsSearch } from './useShowsSearch';
+import { SEARCH_DEBOUNCE_MS } from './useSearchQuery';
+import { useShowsSearch } from './useShowsSearch';
 
 async function flushDebounce() {
   await act(async () => {
@@ -28,9 +29,9 @@ describe('useShowsSearch', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderSearch();
 
-    act(() => result.current.setQuery('m'));
-    act(() => result.current.setQuery('mur'));
-    act(() => result.current.setQuery('murder'));
+    act(() => result.current.changeQuery('m'));
+    act(() => result.current.changeQuery('mur'));
+    act(() => result.current.changeQuery('murder'));
     expect(result.current.status).toBe('loading');
 
     await flushDebounce();
@@ -38,7 +39,7 @@ describe('useShowsSearch', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain('q=murder');
     expect(result.current.status).toBe('success');
-    expect(shownNames(result.current.shownResult)).toEqual(['Murder']);
+    expect(shownNames(result.current.shownAnswer)).toEqual(['Murder']);
   });
 
   it('aborts the previous request when the query changes', async () => {
@@ -52,9 +53,9 @@ describe('useShowsSearch', () => {
     );
     const { result } = renderSearch();
 
-    act(() => result.current.setQuery('kill'));
+    act(() => result.current.changeQuery('kill'));
     await flushDebounce();
-    act(() => result.current.setQuery('kill bill'));
+    act(() => result.current.changeQuery('kill bill'));
     await flushDebounce();
 
     expect(signals).toHaveLength(2);
@@ -67,12 +68,12 @@ describe('useShowsSearch', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderSearch();
 
-    act(() => result.current.setQuery('   '));
+    act(() => result.current.changeQuery('   '));
     await flushDebounce();
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(result.current.status).toBe('idle');
-    expect(result.current.shownResult).toBeNull();
+    expect(result.current.shownAnswer).toBeNull();
   });
 
   it('reports an error and recovers on retry', async () => {
@@ -83,7 +84,7 @@ describe('useShowsSearch', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderSearch();
 
-    act(() => result.current.setQuery('fargo'));
+    act(() => result.current.changeQuery('fargo'));
     await flushDebounce();
     expect(result.current.status).toBe('error');
     expect(result.current.error).toContain('500');
@@ -101,16 +102,16 @@ describe('useShowsSearch', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { result } = renderSearch();
 
-    act(() => result.current.setQuery('dark'));
+    act(() => result.current.changeQuery('dark'));
     await flushDebounce();
-    act(() => result.current.setQuery(''));
-    expect(result.current.shownResult).toBeNull();
+    act(() => result.current.changeQuery(''));
+    expect(result.current.shownAnswer).toBeNull();
 
-    act(() => result.current.setQuery('dark'));
-    expect(result.current.shownResult).toBeNull(); // skeletons, not the dropped answer
+    act(() => result.current.changeQuery('dark'));
+    expect(result.current.shownAnswer).toBeNull(); // skeletons, not the dropped answer
     await flushDebounce();
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(shownNames(result.current.shownResult)).toEqual(['Dark']);
+    expect(shownNames(result.current.shownAnswer)).toEqual(['Dark']);
   });
 });

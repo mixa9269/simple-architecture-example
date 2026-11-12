@@ -1,5 +1,5 @@
-import type { Show } from '@/App/ShowsExplorer/types';
+import type { Show } from '~/App/ShowsExplorer/types';
 
-export interface ShowCardProps {
+export interface Props {
   show: Show;
 }

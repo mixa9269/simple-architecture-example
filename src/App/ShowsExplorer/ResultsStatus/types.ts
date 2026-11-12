@@ -1,6 +1,6 @@
-import type { SearchStatus } from '@/App/ShowsExplorer/types';
+import type { SearchStatus } from '~/App/ShowsExplorer/types';
 
-export interface ResultsStatusProps {
+export interface Props {
   status: SearchStatus;
   /** Query of the shown results */
   query: string;

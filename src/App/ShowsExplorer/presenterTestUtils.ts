@@ -1,7 +1,7 @@
 import { act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { makeSearchItem, okResponse } from './testFixtures';
-import { SEARCH_DEBOUNCE_MS } from './useShowsSearch';
+import { SEARCH_DEBOUNCE_MS } from './useSearchQuery';
 
 /** Five Drama shows (two pages with Drama selected) and two Comedy shows. */
 export const FOREST_ITEMS = [1, 2, 3, 4, 5]

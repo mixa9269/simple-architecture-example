@@ -43,5 +43,5 @@ src/
 src/components/
   ShowsExplorerHeader/        # used only once — belongs in ShowsExplorer/
 App/ShowsExplorer/ShowsList/ShowCard/ShowCard.tsx
-  → import { Chip } from '@/App/Settings/components/Chip/Chip'  # sideways import
+  → import { Chip } from '~/App/Settings/components/Chip/Chip'  # sideways import
 ```

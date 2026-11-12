@@ -8,8 +8,8 @@ export default defineConfig({
   base: './',
   plugins: [react()],
   resolve: {
-    // @/ = src/ — keep in sync with "paths" in tsconfig.app.json
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    // ~/ = src/ — keep in sync with "paths" in tsconfig.app.json
+    alias: { '~': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   test: {
     environment: 'jsdom',

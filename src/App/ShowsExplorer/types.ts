@@ -11,12 +11,14 @@ export interface Show {
 
 export type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
-export interface SearchResult {
-  /** Unique per received answer, starting at FIRST_RESULT_ID */
-  id: number;
-  /** `${query}#${retryCount}` of the request that produced this result */
-  key: string;
+/** One search request; a new object per request (Retry makes a new one with the same query). */
+export interface SearchRequest {
   query: string;
+}
+
+/** The answer to a request: it belongs to the request it references. */
+export interface SearchAnswer {
+  request: SearchRequest;
   shows: Show[];
   error: string | null;
 }

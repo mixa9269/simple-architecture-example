@@ -1,6 +1,6 @@
-import type { SearchStatus } from '@/App/ShowsExplorer/types';
+import type { SearchStatus } from '~/App/ShowsExplorer/types';
 import { formatSummary } from './formatSummary';
-import type { ResultsStatusProps, ResultsStatusVariant } from './types';
+import type { Props, ResultsStatusVariant } from './types';
 
 function getVariant(status: SearchStatus, totalCount: number): ResultsStatusVariant {
   if (status === 'error') return 'error';
@@ -9,7 +9,7 @@ function getVariant(status: SearchStatus, totalCount: number): ResultsStatusVari
   return status === 'success' ? 'empty' : 'none';
 }
 
-export function usePresenter(props: ResultsStatusProps) {
+export function usePresenter(props: Props) {
   const { status, query, error, totalCount, filteredCount, selectedGenre, onRetry } = props;
 
   return {

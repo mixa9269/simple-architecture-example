@@ -1,26 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { getSearchStatus } from './getSearchStatus';
-import { makeResult } from './testFixtures';
+import { makeAnswer } from './testFixtures';
 
-const success = makeResult();
-const failure = makeResult({ error: 'boom' });
+const request = { query: 'murder' };
+const success = makeAnswer({ request });
+const failure = makeAnswer({ request, error: 'boom' });
 
 describe('getSearchStatus', () => {
-  it('is idle for an empty query', () => {
-    expect(getSearchStatus('', '', '#0', null)).toBe('idle');
+  it('is idle for an empty field', () => {
+    expect(getSearchStatus('', null, null)).toBe('idle');
   });
 
-  it('is loading while the query is being debounced', () => {
-    expect(getSearchStatus('murd', 'mur', 'mur#0', null)).toBe('loading');
+  it('is loading while the field is not committed as a request yet', () => {
+    expect(getSearchStatus('murd', null, null)).toBe('loading');
+    expect(getSearchStatus('murde', request, success)).toBe('loading');
   });
 
-  it('is loading until the result for the current request arrives', () => {
-    expect(getSearchStatus('murder', 'murder', 'murder#0', null)).toBe('loading');
-    expect(getSearchStatus('murder', 'murder', 'murder#1', success)).toBe('loading');
+  it('is loading until the answer to the current request arrives', () => {
+    expect(getSearchStatus('murder', request, null)).toBe('loading');
+    expect(getSearchStatus('murder', { query: 'murder' }, success)).toBe('loading'); // retry
   });
 
   it('reports success or error for the current request', () => {
-    expect(getSearchStatus('murder', 'murder', 'murder#0', success)).toBe('success');
-    expect(getSearchStatus('murder', 'murder', 'murder#0', failure)).toBe('error');
+    expect(getSearchStatus('murder', request, success)).toBe('success');
+    expect(getSearchStatus('murder', request, failure)).toBe('error');
   });
 });

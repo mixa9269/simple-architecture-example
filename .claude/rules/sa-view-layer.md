@@ -6,11 +6,26 @@ paths:
 
 # View layer: JSX + `usePresenter` only
 
-Every React component is the **View** layer. It contains exactly two things: a call to its own `usePresenter(props)` hook and JSX. No other JS logic — no `useState`/`useEffect`/other hooks, no computations, no handlers with bodies, no data fetching.
+Every React component is the **View** layer. It contains JSX and, if the component has logic, a call to its own `usePresenter(props)` hook. No other JS logic — no `useState`/`useEffect`/other hooks, no computations, no handlers with bodies, no data fetching.
+
+## Components without logic
+
+Static texts, layout and constant lists are UI, not logic: write them directly in JSX, with no `usePresenter.ts`. A module-level constant rendered with `map` is fine.
+
+```tsx
+export function App() {
+  return (
+    <Container size="md" className={styles.app}>
+      <Title order={1}>TV Shows Explorer</Title>
+      <ShowsExplorer />
+    </Container>
+  );
+}
+```
 
 ## Props: whole object in, whole object on
 
-- The component takes `props` typed by `<Name>Props` from its own `./types.ts` — never destructured in the signature.
+- The component takes `props` typed by `Props` from its own `./types.ts` — never destructured in the signature.
 - It passes `props` whole to the presenter: `usePresenter(props)`. A component without props has no `types.ts` and calls `usePresenter()`.
 - The View reads values only from what `usePresenter` returns, not from `props` directly.
 
@@ -19,9 +34,9 @@ ESLint: destructured component params and `usePresenter(anythingButProps)` are e
 ## Allowed imports in a View file
 
 - its own `./usePresenter`
-- its own `./types` (`import type { <Name>Props } from './types'`)
-- its own `./styles.module.css`
-- child components (nested folders, or `components/` above in the tree via `@/`)
+- its own `./types` (`import type { Props } from './types'`)
+- its own `*.module.css`
+- child components (nested folders, or `components/` above in the tree via `~/`)
 - UI-library components (Mantine)
 
 ## Good
@@ -29,10 +44,10 @@ ESLint: destructured component params and `usePresenter(anythingButProps)` are e
 ```tsx
 import { ShowCard } from './ShowCard/ShowCard';
 import styles from './styles.module.css';
-import type { ShowsListProps } from './types';
+import type { Props } from './types';
 import { usePresenter } from './usePresenter';
 
-export function ShowsList(props: ShowsListProps) {
+export function ShowsList(props: Props) {
   const { shows, isEmpty } = usePresenter(props);
 
   if (isEmpty) return <p className={styles.empty}>Nothing found</p>;
