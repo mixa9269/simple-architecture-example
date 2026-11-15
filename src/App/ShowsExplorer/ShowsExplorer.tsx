@@ -4,7 +4,7 @@ import { ResultsStatus } from './ResultsStatus/ResultsStatus';
 import { SearchInput } from './SearchInput/SearchInput';
 import { ShowsList } from './ShowsList/ShowsList';
 import styles from './styles.module.css';
-import { usePresenter } from './usePresenter';
+import { usePresenter } from './logic/usePresenter';
 
 export function ShowsExplorer() {
   const {
@@ -14,6 +14,7 @@ export function ShowsExplorer() {
     onQueryClear,
     status,
     resultsQuery,
+    resultsGenre,
     error,
     onRetry,
     totalCount,
@@ -45,7 +46,7 @@ export function ShowsExplorer() {
         error={error}
         totalCount={totalCount}
         filteredCount={filteredCount}
-        selectedGenre={selectedGenre}
+        selectedGenre={resultsGenre}
         onRetry={onRetry}
       />
 

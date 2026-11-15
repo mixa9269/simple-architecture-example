@@ -1,10 +1,11 @@
 import { Anchor, Badge, Card, Group, Image, Text, Title } from '@mantine/core';
+import { FavoriteStar } from '~/App/components/FavoriteStar/FavoriteStar';
+import { usePresenter } from './logic/usePresenter';
 import styles from './styles.module.css';
 import type { Props } from './types';
-import { usePresenter } from './usePresenter';
 
 export function ShowCard(props: Props) {
-  const { name, url, imageUrl, meta, genres, summary } = usePresenter(props);
+  const { show, name, url, imageUrl, meta, genres, summary } = usePresenter(props);
 
   return (
     <Card component="article" padding="md" radius="lg" className={styles.card}>
@@ -16,11 +17,14 @@ export function ShowCard(props: Props) {
         )}
       </Card.Section>
 
-      <Title order={3} size="h4" lineClamp={1} mt="md">
-        <Anchor href={url} target="_blank" rel="noreferrer" c="inherit" underline="hover">
-          {name}
-        </Anchor>
-      </Title>
+      <Group justify="space-between" wrap="nowrap" gap="xs" mt="md">
+        <Title order={3} size="h4" lineClamp={1}>
+          <Anchor href={url} target="_blank" rel="noreferrer" c="inherit" underline="hover">
+            {name}
+          </Anchor>
+        </Title>
+        <FavoriteStar show={show} />
+      </Group>
 
       {meta && (
         <Text size="sm" c="dimmed" mt={4}>

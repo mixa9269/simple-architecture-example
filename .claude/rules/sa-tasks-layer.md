@@ -1,0 +1,80 @@
+---
+description: Simple Architecture — Tasks (Interactor / use case) hold the business logic as verb-named arrow functions that call api.<domain>.<method>() in try/catch, log errors and return { ok, data | error }
+paths:
+  - "src/**/tasks/**"
+  - "server/src/tasks/**"
+---
+
+# Tasks: the business logic
+
+A **task** is what the user asks the app to do: search shows, add a show to favorites, log out. In VIPER it is the **Interactor** (Clean Architecture's use case). Its description has no tools in it, so the code doesn't either.
+
+## Shape
+
+- A task is an **arrow function**, usually `async`: `export const toggleFavorite = async (showId: number) => {…}`.
+- **Named with a verb**: `searchShows`, `toggleFavorite`, `loadFavorites`, `logout`. File name = function name.
+- **One task = one exported function.** When it outgrows 120 lines, it becomes a folder (`tasks/searchShows/searchShows.ts` + helpers), but from outside it is still one call. Helpers in a tasks folder are arrow functions too.
+- It calls servers through the **API object** inside `try`: `await api.favorites.toggle(id)` (see `sa-api-layer.md`).
+- In `catch` it **logs** the error (`console.error`) and **reports** it. It never swallows it: the caller must know the task failed.
+- It **returns a result**, `TaskResult<T>` from `~shared/taskResult`: `{ ok: true, data }` or `{ ok: false, error }`. Build it with the helpers in `src/lib/taskResult.ts` (`server/src/lib/taskResult.ts` on the server):
+  - `success(data)`;
+  - `failure(error, signal?)`: logs (except for a cancelled request) and returns the error message.
+
+  These helpers are **not tasks**: they don't do anything the user asked for, they only build a result. So they live in `lib/`, not in `tasks/`, and they are named with nouns, not verbs.
+
+```ts
+// FavoriteStar/logic/tasks/toggleFavorite.ts
+export const toggleFavorite = async (showId: number): Promise<TaskResult<ToggleResult>> => {
+  try {
+    const answer = await api.favorites.toggle(showId);
+    store.dispatch(favoritesReceived(answer.favorites));
+    return success({ show: answer.show, isFavorite: answer.isFavorite });
+  } catch (error) {
+    return failure(error);
+  }
+};
+```
+
+The presenter branches on the result (see `sa-presenter-layer.md`):
+
+```ts
+const result = await toggleFavorite(show.id);
+notifications.show(result.ok ? getToggleToast(result.data.show, result.data.isFavorite) : getErrorToast(result.error));
+```
+
+**Entry tasks** (called by a presenter or a route) return a result. **Inner helper tasks**, called only by other tasks (`loadCached` on the server), may throw: the entry task's `catch` handles it.
+
+## What a task may use
+
+- The **API object**: `api.*` on the frontend, `tvmaze.*` on the server.
+- **Stores directly**: `import { store } from '~/entities/store'`, then `store.dispatch(…)` / `store.getState()` (see `sa-entities.md`). No redux-thunk, redux-saga or other middlemen.
+- Other tasks, pure helpers, `~shared/*` types.
+- An `AbortSignal` parameter when the work can be cancelled. Pass it to the API method and to `failure(error, signal)`.
+
+## What a task never does
+
+- **No React**: no hooks, no JSX, no `react`/`react-dom`/`react-redux` imports. A task would survive moving to another UI library.
+- **No UI library**: no `@mantine/*`. **Toasts, navigation, focus** depend on the environment, so they belong to the presenter. The task returns what happened and the presenter decides how to show it.
+- **No UI state**: loading/disabled flags stay local in the presenter (`useState`). You can `await` a task, so the presenter knows when it finished.
+- **No transport**: no `fetch`, no `callApi`/`requestTvmaze`. Only the API object.
+
+ESLint (`simple-architecture/tasks`, `server-tasks`): React/Mantine imports, `fetch`, the transports and `function` exports are errors in tasks folders.
+
+## Bad
+
+```ts
+export const toggleFavoriteThunk = (id) => async (dispatch) => { … };  // thunk: can't be awaited for a result
+export function toggleFavorite(id) { … }                                // function declaration: use an arrow
+export const favorite = async (id) => { … };                            // noun name
+try { await api.favorites.toggle(id); } catch (e) { console.error(e); } // swallowed: the caller never learns it failed
+await callApi(`/api/favorites/${id}/toggle`, { method: 'POST' });       // transport instead of the API object
+catch (error) { notifications.show(…); }                               // UI inside the task
+```
+
+## Location
+
+- Used by one component → `Component/logic/tasks/`.
+- Reused by several components → global `src/tasks/`.
+- Backend tasks → `server/src/tasks/` (see `sa-backend.md`).
+
+A `tasks/` folder holds **only tasks** and the helpers they are split into (`tasks/searchShows/paginate.ts`). Plumbing that is not a use case (result builders, small utilities shared by many layers) goes to `lib/`: `src/lib/`, `server/src/lib/`.

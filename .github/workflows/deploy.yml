@@ -28,6 +28,9 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+        env:
+          # URL of the backend on Render (repo Settings → Secrets and variables → Actions → Variables).
+          VITE_API_URL: ${{ vars.API_URL }}
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

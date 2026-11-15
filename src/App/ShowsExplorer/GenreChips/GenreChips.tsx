@@ -1,7 +1,7 @@
 import { Chip, Group } from '@mantine/core';
 import styles from './styles.module.css';
 import type { Props } from './types';
-import { usePresenter } from './usePresenter';
+import { usePresenter } from './logic/usePresenter';
 
 export function GenreChips(props: Props) {
   const { items, value, onChange } = usePresenter(props);

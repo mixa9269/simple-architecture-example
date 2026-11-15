@@ -6,11 +6,11 @@ paths:
 
 # View layer: JSX + `usePresenter` only
 
-Every React component is the **View** layer. It contains JSX and, if the component has logic, a call to its own `usePresenter(props)` hook. No other JS logic — no `useState`/`useEffect`/other hooks, no computations, no handlers with bodies, no data fetching.
+Every React component is the **View** layer. It contains JSX and, if the component has logic, a call to its own `usePresenter(props)` hook from `./logic/usePresenter` (see `sa-logic-folder.md`). No other JS logic — no `useState`/`useEffect`/other hooks, no computations, no handlers with bodies, no data fetching.
 
 ## Components without logic
 
-Static texts, layout and constant lists are UI, not logic: write them directly in JSX, with no `usePresenter.ts`. A module-level constant rendered with `map` is fine.
+Static texts, layout and constant lists are UI, not logic: write them directly in JSX, with no `logic/` folder. A module-level constant rendered with `map` is fine.
 
 ```tsx
 export function App() {
@@ -33,19 +33,21 @@ ESLint: destructured component params and `usePresenter(anythingButProps)` are e
 
 ## Allowed imports in a View file
 
-- its own `./usePresenter`
+- its own `./logic/usePresenter` (never `./usePresenter`)
 - its own `./types` (`import type { Props } from './types'`)
 - its own `*.module.css`
 - child components (nested folders, or `components/` above in the tree via `~/`)
 - UI-library components (Mantine)
 
+Never in a View: tasks, the store (`useSelector`, `store`), `api.*`, `notifications`. They are reached through the presenter.
+
 ## Good
 
 ```tsx
 import { ShowCard } from './ShowCard/ShowCard';
+import { usePresenter } from './logic/usePresenter';
 import styles from './styles.module.css';
 import type { Props } from './types';
-import { usePresenter } from './usePresenter';
 
 export function ShowsList(props: Props) {
   const { shows, isEmpty } = usePresenter(props);

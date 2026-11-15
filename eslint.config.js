@@ -21,5 +21,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Node code: the backend, the shared API contract, tooling.
+    files: ['server/**/*.ts', 'shared/**/*.ts', 'vite.config.ts'],
+    languageOptions: { globals: globals.node },
+  },
   ...simpleArchitecture,
 ]);
