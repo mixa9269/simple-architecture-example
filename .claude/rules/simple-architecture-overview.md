@@ -17,11 +17,11 @@ The app has its own **backend** (`server/`, Express) with the same idea: thin ro
 | Rule | File |
 |---|---|
 | A component is View only: JSX + `usePresenter(props)`; no logic → no presenter, texts right in JSX | `sa-view-layer.md` |
-| The presenter is the bridge between the View and the tasks: UI state, handlers, toasts; takes props whole; no `setState` in render, requests as objects + `AbortController` | `sa-presenter-layer.md` |
+| The presenter is the bridge between the View and the tasks: reads the store, calls tasks from handlers (no loading in `useEffect`), toasts; takes props whole; no `setState` in render | `sa-presenter-layer.md` |
 | All JS logic of a component lives in its `logic/` folder; tasks in `logic/tasks/` | `sa-logic-folder.md` |
 | A task = verb-named arrow function: `try { await api.x.y() } catch { log }` → returns `{ ok, data \| error }`; no React, no UI library; writes the store directly | `sa-tasks-layer.md` |
 | Servers are called through an API object `api.<domain>.<method>()` (`tvmaze.*` on the server): thin typed arrows, only tasks call it | `sa-api-layer.md` |
-| Entities = Redux Toolkit store; presenters `useSelector`, tasks `store.dispatch`; no loading flags in the store | `sa-entities.md` |
+| Entities = Redux Toolkit store with set-only reducers and selectors; shared UI state (search) lives there too; presenters `useSelector`, tasks `store.dispatch` | `sa-entities.md` |
 | Backend: thin Express routes, tasks without `express`, `const cache = {}` / `const favorite = {}` entities; data rules on the server, presentation on the client | `sa-backend.md` |
 | Max **120 lines** per file (ESLint `max-lines`), frontend and backend | `sa-file-size-120.md` |
 | Each component has its own folder (View, `types.ts` with `Props`, `*.module.css`, `logic/`); single-use children nest inside the parent; folders mirror the UI | `sa-component-tree.md` |
@@ -51,7 +51,8 @@ src/
   theme.ts, index.css
   api/                         # api.ts = { shows, favorites } over callApi.ts (transport)
   lib/taskResult.ts            # success / failure: builds the result of every task (not a task)
-  entities/                    # store.ts + favorites/favoritesSlice.ts
+  lib/debounce.ts              # hand-written debounce with cancel (a utility, not a task)
+  entities/                    # store.ts, favorites/ (slice), search/ (slice, selectors, pure status fns)
   testUtils/                   # fixtures, renderHookWithStore
   App/
     App.tsx, styles.module.css # static layout — no presenter
@@ -60,19 +61,19 @@ src/
       logic/usePresenter.ts, getToggleToast.ts, tasks/toggleFavorite.ts
     FavoritesButton/           # header button with the count + Drawer
       logic/usePresenter.ts, tasks/loadFavorites.ts
-      FavoritesList/
+      FavoritesList/           # keepUnstarred: an unstarred show stays until the Drawer is reopened
         FavoriteItem/
     ShowsExplorer/
-      ShowsExplorer.tsx, types.ts, styles.module.css
+      ShowsExplorer.tsx, styles.module.css   # layout only
       logic/
-        usePresenter.ts
-        useShowsSearch.ts      # loads the request (AbortController), answer, status
-        useSearchRequest.ts    # field + debounce → request { query, genre, page }, retry
-        getSearchStatus.ts, getShownAnswer.ts, getSelection.ts
-        useSearchUrl.ts, searchUrl.ts   # ?q=&genre=&page=
-        tasks/searchShows.ts   # GET /api/shows
-        testFixtures.ts, presenterTestUtils.ts, *.test.ts
-      SearchInput/, ResultsStatus/, GenreChips/   # View + types.ts + styles + logic/
+        usePresenter.ts, useSearchUrl.ts, searchUrl.ts   # restore from / sync to ?q=&genre=&page=
+      tasks/                   # search tasks used by the children below
+        typeQuery.ts           # field text → store; debounced searchShows; empty field clears
+        searchShows.ts, selectGenre.ts, selectPage.ts, retrySearch.ts, restoreSearch.ts
+        loadSearch.ts          # inner: AbortController, requestStarted / answerReceived
+        searchTestUtils.ts, *.test.ts
+      SearchInput/, GenreChips/, ResultsPagination/   # no props: read the store, call tasks
+      ResultsStatus/           # + useIsSlow: "waking up the server" after 3 s
       ShowsList/
         ShowCard/
         ShowCardSkeleton/      # no props, no logic → only View + styles

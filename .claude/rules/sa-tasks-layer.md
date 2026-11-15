@@ -71,10 +71,35 @@ await callApi(`/api/favorites/${id}/toggle`, { method: 'POST' });       // trans
 catch (error) { notifications.show(…); }                               // UI inside the task
 ```
 
+## Module state
+
+A task module may keep **non-serializable runtime handles** that can't go to the store: the `AbortController` of the load in progress (`loadSearch.ts`), a debounced function (`typeQuery.ts` → `debounce(searchShows, 400)` from `~/lib/debounce`). Data stays in the store.
+
+```ts
+// ShowsExplorer/tasks/loadSearch.ts
+let current: AbortController | null = null;
+
+export const loadSearch = async (request: SearchRequest) => {
+  current?.abort();
+  const controller = (current = new AbortController());
+  store.dispatch(requestStarted(request));
+  try {
+    const result = await api.shows.search(request, controller.signal);
+    if (!controller.signal.aborted) store.dispatch(answerReceived({ request, result, error: null }));
+    return success(result);
+  } catch (error) {
+    /* failure(error, controller.signal) + store the error answer unless aborted */
+  }
+};
+```
+
 ## Location
 
+Same idea as `components/` (see `sa-reusable-components.md`):
+
 - Used by one component → `Component/logic/tasks/`.
-- Reused by several components → global `src/tasks/`.
+- Reused by several components of one subtree → a `tasks/` folder at the level of their nearest common ancestor, next to its `logic/`: `ShowsExplorer/tasks/` (`typeQuery`, `selectGenre`, `selectPage`, `retrySearch`, `restoreSearch`, inner `loadSearch`) is used by `SearchInput`, `GenreChips`, `ResultsStatus`, `ResultsPagination` and `ShowsExplorer`. Only components **below** that level import from it.
+- Reused across the app → global `src/tasks/`.
 - Backend tasks → `server/src/tasks/` (see `sa-backend.md`).
 
-A `tasks/` folder holds **only tasks** and the helpers they are split into (`tasks/searchShows/paginate.ts`). Plumbing that is not a use case (result builders, small utilities shared by many layers) goes to `lib/`: `src/lib/`, `server/src/lib/`.
+A `tasks/` folder holds **only tasks**, the helpers they are split into (`tasks/searchShows/paginate.ts`) and their tests/test utils (`searchTestUtils.ts`). Plumbing that is not a use case (result builders, small utilities shared by many layers) goes to `lib/`: `src/lib/`, `server/src/lib/`.

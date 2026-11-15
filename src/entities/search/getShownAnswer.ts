@@ -1,4 +1,4 @@
-import type { SearchAnswer, SearchStatus } from '~/App/ShowsExplorer/types';
+import type { SearchAnswer, SearchStatus } from './types';
 
 /**
  * The answer to keep on screen.

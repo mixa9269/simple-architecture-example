@@ -37,39 +37,43 @@ export function usePresenter(props: Props) {
 
 ## Splitting
 
-When `usePresenter` grows, split it by meaning into separate hooks (`useShowsSearch.ts`, `useSearchRequest.ts`) and plain functions (`getSelection.ts`, `getShownAnswer.ts`) in the same `logic/` folder. Business logic (talking to the server, changing the store) goes to tasks. `usePresenter` then reads like a table of contents: it composes the pieces and maps them to what the View renders.
+When `usePresenter` grows, split it by meaning into separate hooks (`useSearchUrl.ts`, `useIsSlow.ts`) and plain functions (`formatSummary.ts`, `keepUnstarred.ts`) in the same `logic/` folder. Business logic (talking to the server, changing the store) goes to tasks; shared state goes to the store and is read with selectors. `usePresenter` then reads like a table of contents: it reads what the View needs and wires the events to tasks.
 
 ```ts
-// ShowsExplorer/logic/usePresenter.ts (shortened)
+// GenreChips/logic/usePresenter.ts — reads the store, picks the task
 export function usePresenter() {
-  const initial = useInitialSearchUrl();
-  const search = useShowsSearch(initial);          // calls the searchShows task
-  const result = search.shownAnswer?.result ?? null;
-  const selection = getSelection(search.status, search.request, result);
+  const result = useSelector(selectShownResult);
+  const { genre } = useSelector(selectSelection);
+  const genres = result?.genres ?? NO_GENRES;
 
   return {
-    query: search.query,
-    onQueryChange: search.changeQuery,
-    genres: result?.genres ?? NO_GENRES,
-    selectedGenre: selection.genre,
-    onGenreChange: search.selectGenre,
-    shows: result?.shows ?? NO_SHOWS,
-    // …
+    isHidden: !result?.total || genres.length === 0,
+    items: [{ value: ALL_GENRES, label: 'All' }, ...genres.map((item) => ({ value: item, label: item }))],
+    value: genre ?? ALL_GENRES,
+    onChange: (value: string) => selectGenre(value === ALL_GENRES ? null : value),
   };
 }
 ```
+
+## The flow
+
+Click → View (`onChange`) → **Presenter** (knows from the store what is shown and selected, picks the task) → **Task** (request, writes the store) → **Store** → every presenter that reads it re-renders → View.
+
+A child that needs shared data reads it **itself** through its own presenter and selectors, and calls the task itself. The parent does not collect 20 props for its children; it is often just layout (`ShowsExplorer`).
 
 ## State and requests
 
 Keep the data flow simple and predictable:
 
+- **Data is loaded from handlers, through tasks**: `onChange → selectGenre(genre)`, `onChange → typeQuery(value)`. Not in `useEffect` reacting to state.
+- **`useEffect` only for startup and subscriptions/timers**: restoring the search from the URL once, syncing the URL, a "slow request" timer.
 - **No `setState` during render.** Not even guarded by a condition — it is easy to loop and hard to read.
-- **A change caused by the user is set in the handler**, not derived in an effect. Debounce lives in the handler too: a timer in `useRef`, cleared on each change and on unmount.
-- **In an effect, `setState` only in async callbacks** (`.then`, `.catch`), never synchronously in its body.
-- **A request is an object in state**, created by the handler (`{ query, genre, page }`); Retry creates a new object with the same values. The effect depends on that object and only loads it, through a task (`searchShows(request, signal)`).
-- **One cancellation mechanism: `AbortController`** — abort in the effect cleanup, ignore the answer if `signal.aborted`.
-- **An answer belongs to its request by reference** (`answer.request === request`), not by string keys or counters.
+- **In an effect, `setState` only in async callbacks** (`.then`, a timer callback), never synchronously in its body.
+- **Debounce** is a `lib/debounce` utility used by the task (`typeQuery` → `debounce(searchShows, 400)`), not a timer juggled in the presenter.
+- **Requests and cancellation live in the loading task**: a request is an object (`{ query, genre, page }`) stored with `requestStarted`; Retry stores a new object with the same values. The task keeps the current `AbortController` in its module and stores nothing for an aborted load.
+- **An answer belongs to its request by reference** (`answer.request === request`), not by string keys or counters. Redux keeps stored objects by reference, so this works in the store too.
 - **Calling a task**: `const result = await task()`, then branch on `result.ok` (data → render or toast; `result.error` → error state or toast). No try/catch around a task: it never throws, it already logged the error. Keep pending flags local (`setIsPending(true)` before, `false` after). No Redux round-trip for loading flags.
+- **`useCallback` / `useMemo` only where a stable reference matters** (a dependency of an effect, a prop of a memoized child). Derived store data is memoized by `createSelector`, not in the presenter.
 
 ```ts
 // FavoriteStar/logic/usePresenter.ts
@@ -81,34 +85,9 @@ const onToggle = async () => {
     result.ok ? getToggleToast(result.data.show, result.data.isFavorite) : getErrorToast(result.error),
   );
 };
-```
 
-```ts
-// logic/useSearchRequest.ts — debounce in the handler
-const changeQuery = (value: string) => {
-  setQuery(value);
-  clearTimeout(timerRef.current);
-  const trimmed = value.trim();
-  if (!trimmed) return setRequest(null);
-  timerRef.current = setTimeout(
-    () => setRequest((current) =>
-      current?.query === trimmed ? current : { query: trimmed, genre: null, page: 1 }),
-    SEARCH_DEBOUNCE_MS,
-  );
-};
-
-// logic/useShowsSearch.ts — the effect only loads the current request via the task
-useEffect(() => {
-  if (!request) return;
-  const controller = new AbortController();
-  searchShows(request, controller.signal).then((result) => {
-    if (controller.signal.aborted) return;
-    setAnswer(result.ok
-      ? { request, result: result.data, error: null }
-      : { request, result: null, error: result.error });
-  });
-  return () => controller.abort();
-}, [request]);
+// SearchInput/logic/usePresenter.ts — the handler calls the task; the task stores the text and debounces
+onChange: (event: ChangeEvent<HTMLInputElement>) => typeQuery(event.currentTarget.value),
 ```
 
 ## Bad
@@ -121,6 +100,9 @@ useEffect(() => {
 - One 250-line `usePresenter` with search, debounce, abort, pagination and genre filtering all inline.
 - `fetch`/`callApi`/`api.*` or `store.dispatch` right in the presenter: that is a task's job.
 - `try { await task() } catch {…}` in the presenter: tasks report errors in their result.
+- `useEffect(() => { load(request) }, [request])`: load from the handler that changed the request.
+- A parent passing store data down as props to children that could read it themselves.
+- `useCallback` around every handler "just in case".
 - A task that shows a toast or navigates: the presenter does that with the task's result.
 - Data rules (filtering, pagination, caching) in the presenter: they belong to the server (`sa-backend.md`).
 - Returning raw API objects and letting the View dig into them (`show.show.image?.medium`); format data for the View in the presenter.

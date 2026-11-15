@@ -1,10 +1,9 @@
 import { Alert, Button, Text } from '@mantine/core';
-import styles from './styles.module.css';
-import type { Props } from './types';
 import { usePresenter } from './logic/usePresenter';
+import styles from './styles.module.css';
 
-export function ResultsStatus(props: Props) {
-  const { variant, errorMessage, emptyMessage, summary, onRetry } = usePresenter(props);
+export function ResultsStatus() {
+  const { variant, errorMessage, emptyMessage, summary, onRetry } = usePresenter();
 
   if (variant === 'error') {
     return (
@@ -23,6 +22,14 @@ export function ResultsStatus(props: Props) {
     return (
       <Text className={styles.empty} c="dimmed" aria-live="polite">
         {emptyMessage}
+      </Text>
+    );
+  }
+
+  if (variant === 'waking') {
+    return (
+      <Text size="sm" c="dimmed" aria-live="polite">
+        Waking up the server (free hosting) — the first search can take up to a minute…
       </Text>
     );
   }

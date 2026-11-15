@@ -1,4 +1,4 @@
-import type { SearchAnswer, SearchRequest, SearchStatus } from '~/App/ShowsExplorer/types';
+import type { SearchAnswer, SearchRequest, SearchStatus } from './types';
 
 /** Loading until the field is committed as a request and the answer to that request arrives. */
 export function getSearchStatus(

@@ -1,11 +1,10 @@
 import { ShowCard } from './ShowCard/ShowCard';
 import { ShowCardSkeleton } from './ShowCardSkeleton/ShowCardSkeleton';
-import styles from './styles.module.css';
-import type { Props } from './types';
 import { usePresenter } from './logic/usePresenter';
+import styles from './styles.module.css';
 
-export function ShowsList(props: Props) {
-  const { shows, skeletonKeys, showSkeleton, isHidden } = usePresenter(props);
+export function ShowsList() {
+  const { shows, skeletonKeys, showSkeleton, isHidden } = usePresenter();
 
   if (isHidden) return null;
 

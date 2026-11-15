@@ -26,7 +26,7 @@ Benefit: deleting a subtree also deletes the reusable components only it used.
 
 ## The same idea for tasks
 
-A task used by one component lives in its `logic/tasks/`. A task reused by several components goes to the global `src/tasks/` (see `sa-tasks-layer.md`). A reusable component keeps its own tasks inside it: `App/components/FavoriteStar/logic/tasks/toggleFavorite.ts` is used only by `FavoriteStar`, even though `FavoriteStar` itself is used in two places.
+A task used by one component lives in its `logic/tasks/`. A task reused by several components goes to a `tasks/` folder of their nearest common ancestor (`ShowsExplorer/tasks/`, used only below it), or to the global `src/tasks/` when reused across the app (see `sa-tasks-layer.md`). A reusable component keeps its own tasks inside it: `App/components/FavoriteStar/logic/tasks/toggleFavorite.ts` is used only by `FavoriteStar`, even though `FavoriteStar` itself is used in two places.
 
 ## Good
 

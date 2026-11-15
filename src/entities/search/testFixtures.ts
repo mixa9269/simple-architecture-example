@@ -1,4 +1,4 @@
-import type { SearchAnswer, ShowsPage } from '~/App/ShowsExplorer/types';
+import type { SearchAnswer, ShowsPage } from './types';
 
 export { errorResponse, makeShow, okResponse } from '~/testUtils/fixtures';
 

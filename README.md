@@ -20,6 +20,9 @@ Homework #2 (fullstack):
 - a **5-minute cache** (`const cache = {}`): the same TVmaze request within 5 minutes is answered from memory
 - **favorites**: a star on each show, a toast on add/remove, a header button with the count that opens the list. All favorites logic is on the server (`const favorite = {}`), the Redux store only mirrors it
 - the project follows lecture 2: **Tasks** (business logic), **Entities** (store), `logic/` folders
+- the search lives in the Redux store and is loaded by tasks from the handlers (no `useEffect` loading); the field, chips, status, list and pagination read the store themselves
+- in the favorites list an unstarred show stays (with an empty star) until the list is reopened, so a misclick can be undone
+- when the free Render backend is waking up (an answer takes longer than 3 s), the search says so instead of looking frozen
 
 Stack: Vite, React, TypeScript, [Mantine](https://mantine.dev) (+ notifications), Redux Toolkit, CSS Modules, Express, Vitest.
 

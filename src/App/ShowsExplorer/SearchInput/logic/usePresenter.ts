@@ -1,8 +1,11 @@
 import { useRef, type ChangeEvent } from 'react';
-import type { Props } from '~/App/ShowsExplorer/SearchInput/types';
+import { useSelector } from 'react-redux';
+import { typeQuery } from '~/App/ShowsExplorer/tasks/typeQuery';
+import { selectSearchQuery, selectSearchStatus } from '~/entities/search/searchSelectors';
 
-export function usePresenter(props: Props) {
-  const { value, isLoading, onChange, onClear } = props;
+export function usePresenter() {
+  const value = useSelector(selectSearchQuery);
+  const isLoading = useSelector(selectSearchStatus) === 'loading';
   const inputRef = useRef<HTMLInputElement>(null);
 
   return {
@@ -10,10 +13,10 @@ export function usePresenter(props: Props) {
     value,
     isLoading,
     showClear: !isLoading && value.length > 0,
-    onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(event.currentTarget.value),
+    onChange: (event: ChangeEvent<HTMLInputElement>) => typeQuery(event.currentTarget.value),
     // The clear button disappears on click, so give the focus back to the field.
     onClear: () => {
-      onClear();
+      typeQuery('');
       inputRef.current?.focus();
     },
   };

@@ -29,13 +29,14 @@ Never silence it with `eslint-disable max-lines` or by squeezing code onto fewer
 
 ```
 ShowsExplorer/
-  ShowsExplorer.tsx        (65 lines)
+  ShowsExplorer.tsx        (25 lines)
   logic/
-    usePresenter.ts        (60 lines)
-    useShowsSearch.ts      (65 lines)
-    useSearchRequest.ts    (55 lines)
-    getSelection.ts        (15 lines)
-    tasks/searchShows.ts   (12 lines)
+    usePresenter.ts        (7 lines)
+    useSearchUrl.ts        (45 lines)
+  tasks/
+    loadSearch.ts          (45 lines)
+    typeQuery.ts           (30 lines)
+    selectGenre.ts         (15 lines)
 ```
 
 ## Bad

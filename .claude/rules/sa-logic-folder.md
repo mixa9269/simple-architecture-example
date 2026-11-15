@@ -39,7 +39,7 @@ ShowCard/
 
 ## Reusable tasks
 
-A task used by one component lives in that component's `logic/tasks/`. A task used by several components goes to the global `src/tasks/` (same idea as `components/`, see `sa-reusable-components.md`). When its users shrink back to one, move it back.
+A task used by one component lives in that component's `logic/tasks/`. A task used by several components of one subtree goes to a `tasks/` folder of their nearest common ancestor, next to its `logic/` (`ShowsExplorer/tasks/`); app-wide ones go to `src/tasks/` (same idea as `components/`, see `sa-reusable-components.md`). When its users shrink back to one, move it back.
 
 ## Bad
 

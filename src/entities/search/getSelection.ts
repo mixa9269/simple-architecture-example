@@ -1,4 +1,4 @@
-import type { SearchRequest, SearchStatus, ShowsPage } from '~/App/ShowsExplorer/types';
+import type { SearchRequest, SearchStatus, ShowsPage } from './types';
 
 /**
  * Genre and page for the chips and the pagination.

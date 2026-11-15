@@ -141,7 +141,7 @@ export default [
   {
     name: 'simple-architecture/tasks',
     files: ['src/**/tasks/**/*.{js,ts}'],
-    ignores: ['**/*.test.{js,ts}'],
+    ignores: ['**/*.test.{js,ts}', '**/*TestUtils.{js,ts}'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -160,7 +160,7 @@ export default [
   {
     name: 'simple-architecture/server-tasks',
     files: ['server/src/tasks/**/*.ts', 'server/src/entities/**/*.ts'],
-    ignores: ['**/*.test.ts'],
+    ignores: ['**/*.test.ts', '**/*TestUtils.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -178,13 +178,13 @@ export default [
   {
     name: 'simple-architecture/server-tasks-arrows',
     files: ['server/src/tasks/**/*.ts'],
-    ignores: ['**/*.test.ts'],
+    ignores: ['**/*.test.ts', '**/*TestUtils.ts'],
     rules: { 'no-restricted-syntax': ARROW_ONLY },
   },
   {
     name: 'simple-architecture/api-layer',
     files: ['src/api/**/*.ts', 'server/src/tvmaze/tvmaze.ts'],
-    ignores: ['**/*.test.ts'],
+    ignores: ['**/*.test.ts', '**/*TestUtils.ts'],
     rules: { 'no-restricted-syntax': ARROW_ONLY },
   },
 ];

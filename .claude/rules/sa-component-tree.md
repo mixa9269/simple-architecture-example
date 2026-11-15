@@ -47,20 +47,18 @@ App/
       tasks/loadFavorites.ts
     FavoritesList/
   ShowsExplorer/
-    ShowsExplorer.tsx
-    types.ts              # SearchRequest, SearchAnswer — shared by the subtree
+    ShowsExplorer.tsx     # layout only
     logic/
       usePresenter.ts
-      useShowsSearch.ts
-      tasks/searchShows.ts
+      useSearchUrl.ts
+    tasks/                # search tasks reused by the children below
+      typeQuery.ts, selectGenre.ts, selectPage.ts, loadSearch.ts
     SearchInput/
-      SearchInput.tsx
-      types.ts
+      SearchInput.tsx     # no props: reads the store through its presenter
       styles.module.css
       logic/usePresenter.ts
     ShowsList/
       ShowsList.tsx
-      types.ts
       logic/usePresenter.ts
       ShowCard/
         ShowCard.tsx

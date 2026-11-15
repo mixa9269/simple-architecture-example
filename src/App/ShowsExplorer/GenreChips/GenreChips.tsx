@@ -1,10 +1,11 @@
 import { Chip, Group } from '@mantine/core';
-import styles from './styles.module.css';
-import type { Props } from './types';
 import { usePresenter } from './logic/usePresenter';
+import styles from './styles.module.css';
 
-export function GenreChips(props: Props) {
-  const { items, value, onChange } = usePresenter(props);
+export function GenreChips() {
+  const { isHidden, items, value, onChange } = usePresenter();
+
+  if (isHidden) return null;
 
   return (
     <Chip.Group multiple={false} value={value} onChange={onChange}>
