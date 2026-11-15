@@ -49,10 +49,10 @@ npm run build
 
 ## Deploy
 
-- **Frontend**: GitHub Pages (`.github/workflows/deploy.yml`). The build reads `VITE_API_URL` from the repository variable `API_URL`.
-- **Backend**: Render, from [`render.yaml`](render.yaml) (`npm ci`, `npm run start:server`, `CORS_ORIGIN` = the Pages origin).
+- **Frontend**: GitHub Pages (`.github/workflows/deploy.yml`). The production build takes the backend URL from [`.env.production`](.env.production) (`VITE_API_URL`). `npm run dev` and the tests don't read that file, so they keep using the local server.
+- **Backend**: Render, from [`render.yaml`](render.yaml) (`npm ci`, `npm run start:server`, `CORS_ORIGIN` = the Pages origin): https://simple-architecture-shows-api.onrender.com
 
-One-time setup: create the Render service from the blueprint. Then set the repository variable `API_URL` (Settings → Secrets and variables → Actions → Variables) to the service URL and re-run the Pages workflow. On the free plan the service sleeps when idle: the first request takes up to ~50 s, and a restart clears the cache and the favorites.
+If the Render URL changes, update `.env.production`. On the free plan the service sleeps when idle: the first request takes up to ~50 s, and a restart clears the cache and the favorites.
 
 ## AI rules
 
