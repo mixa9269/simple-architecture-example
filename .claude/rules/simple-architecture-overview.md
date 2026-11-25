@@ -46,46 +46,17 @@ ESLint enforcement: `eslint/simple-architecture.js` + `eslint/simple-architectur
 - Homework logic is hand-written: data fetching (no `useQuery`), debounce, URL state. Don't use `useDebouncedValue` / `usePagination` from `@mantine/hooks` for it.
 - Style with `className` / `classNames` + CSS Modules and `--mantine-*` variables, not with computed `style` props.
 
-## Project tree (TV Shows Explorer)
+## Where things live
 
-```
-shared/api.ts                  # API contract types: Show, ShowsPage, FavoritesAnswer, ToggleFavoriteAnswer
-shared/taskResult.ts           # TaskResult<T, E> = { ok: true, data } | { ok: false, error }
-server/src/                    # backend, see sa-backend.md
-  app.ts, index.ts, routes/, tasks/, lib/, entities/, tvmaze/ (tvmaze.ts = API object)
-src/
-  main.tsx                     # Provider(store) + MantineProvider + Notifications + <App/> (exempt from View rule)
-  theme.ts, index.css
-  api/                         # api.ts = { shows, favorites } over callApi.ts (transport)
-  lib/taskResult.ts            # success / failure: builds the result of every task (not a task)
-  lib/debounce.ts              # hand-written debounce with cancel (a utility, not a task)
-  entities/                    # store.ts, favorites/ (slice) — global data
-                               #   search/ — KNOWN DEVIATION: not global, due to move into ShowsExplorer's presenter
-  testUtils/                   # fixtures, renderHookWithStore
-  App/
-    App.tsx, styles.module.css # static layout — no presenter
-    components/FavoriteStar/   # reused by ShowCard and FavoriteItem
-      FavoriteStar.tsx, types.ts, styles.module.css
-      logic/usePresenter.ts, getToggleToast.ts, tasks/toggleFavorite.ts
-    FavoritesButton/           # header button with the count + Drawer
-      logic/usePresenter.ts, tasks/loadFavorites.ts
-      FavoritesList/           # keepUnstarred: an unstarred show stays until the Drawer is reopened
-        FavoriteItem/
-    ShowsExplorer/
-      ShowsExplorer.tsx, styles.module.css   # layout only
-      logic/
-        usePresenter.ts, useSearchUrl.ts, searchUrl.ts   # restore from / sync to ?q=&genre=&page=
-      tasks/                   # search tasks used by the children below
-        typeQuery.ts           # field text → store; debounced searchShows; empty field clears
-        searchShows.ts, selectGenre.ts, selectPage.ts, retrySearch.ts, restoreSearch.ts
-        loadSearch.ts          # inner: AbortController, requestStarted / answerReceived
-        searchTestUtils.ts, *.test.ts
-      SearchInput/, GenreChips/, ResultsPagination/   # read the search slice (known deviation, see sa-entities.md)
-      ResultsStatus/           # + useIsSlow: "waking up the server" after 3 s
-      ShowsList/
-        ShowCard/
-        ShowCardSkeleton/      # no props, no logic → only View + styles
-```
+The rules describe patterns; the code itself is the map. Read the folders instead of relying on a list here.
+
+- `src/App/` — the component tree; folders mirror the UI (`sa-component-tree.md`).
+- `src/api/` — the API object over `callApi`; `src/entities/` — the store (global data only); `src/lib/` — plumbing that is not a task.
+- `server/src/` — routes → tasks → entities, plus one folder per external API (`sa-backend.md`).
+- `shared/` — types both sides share: the API contract and `TaskResult`.
+- `eslint/` — the enforced part of these rules.
+
+Reference implementations worth copying: a screen that owns its data — `src/App/ShowsExplorer/logic/`; global data with a task writing the store — the favorites (`src/entities/favorites/`, `FavoriteStar`).
 
 Tests (Vitest) live next to the code they cover: pure functions, hooks and presenters (`renderHook`), tasks with a stubbed `fetch`. No tests of Mantine rendering. Two Vitest projects: `web` (jsdom, `src/`) and `server` (node, `server/`).
 

@@ -27,8 +27,8 @@ Static texts, layout and constant lists are UI, not logic: write them directly i
 export function App() {
   return (
     <Container size="md" className={styles.app}>
-      <Title order={1}>TV Shows Explorer</Title>
-      <ShowsExplorer />
+      <Title order={1}>Shop</Title>
+      <Shop />
     </Container>
   );
 }
@@ -55,20 +55,20 @@ Never in a View: tasks, the store (`useSelector`, `store`, `~/entities/*`), `api
 ## Good
 
 ```tsx
-import { ShowCard } from './ShowCard/ShowCard';
+import { ProductCard } from './ProductCard/ProductCard';
 import { usePresenter } from './logic/usePresenter';
 import styles from './styles.module.css';
 import type { Props } from './types';
 
-export function ShowsList(props: Props) {
-  const { shows, isEmpty } = usePresenter(props);
+export function ProductList(props: Props) {
+  const { products, isEmpty } = usePresenter(props);
 
   if (isEmpty) return <p className={styles.empty}>Nothing found</p>;
 
   return (
     <ul className={styles.list}>
-      {shows.map((show) => (
-        <ShowCard key={show.id} show={show} />
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
       ))}
     </ul>
   );
@@ -82,25 +82,25 @@ Simple expressions needed to render (`map`, ternaries, passing a handler `onClic
 ```tsx
 import { useEffect, useState } from 'react';
 
-export function ShowsList({ query }: { query: string }) { // destructured, inline props type
-  const [shows, setShows] = useState<Show[]>([]);   // state in View
-  useEffect(() => {                                  // side effect in View
-    fetch(`https://api.tvmaze.com/search/shows?q=${query}`)
+export function ProductList({ query }: { query: string }) { // destructured, inline props type
+  const [products, setProducts] = useState<Product[]>([]); // state in View
+  useEffect(() => {                                         // side effect in View
+    fetch(`https://example.com/api/products?q=${query}`)
       .then((r) => r.json())
-      .then(setShows);
+      .then(setProducts);
   }, [query]);
 
   return (
     <ul>
-      {shows.map((s) => (
+      {products.map((p) => (
         <li
-          key={s.show.id}
-          onClick={() => {                           // logic in JSX handler
-            const genre = s.show.genres[0];
-            console.log(genre);
+          key={p.id}
+          onClick={() => {                                  // logic in JSX handler
+            const category = p.categories[0];
+            console.log(category);
           }}
         >
-          {s.show.name}
+          {p.title}
         </li>
       ))}
     </ul>

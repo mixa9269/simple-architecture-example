@@ -16,9 +16,9 @@ paths:
 
 Why `~` and not `@`: `@/App/…` looks like a scoped package (`@mantine/core`) at a glance. `~` reads as "home of this project" — familiar to anyone who used a UNIX shell.
 
-- Code of the **own folder** and **own children** is imported relatively: `./logic/usePresenter`, `./types`, `./ShowCard/ShowCard`, `./tasks/searchShows`.
+- Code of the **own folder** and **own children** is imported relatively: `./logic/usePresenter`, `./types`, `./ProductCard/ProductCard`, `./tasks/addToCart`.
 - `logic/` is a subfolder: from there, the component's own `types.ts` is reached via `~/…/types`.
-- Anything **outside the own folder** (a parent, a sibling of a parent, `components/` above in the tree) is imported through `~/`: `~/App/ShowsExplorer/types`.
+- Anything **outside the own folder** (a parent, a sibling of a parent, `components/` above in the tree) is imported through `~/`: `~/App/Shop/types`.
 - Never `../` — the path then says where the code is, not how deep the importer happens to be, and moving a folder does not break its imports.
 
 ESLint: `no-restricted-imports` with the pattern `^\.\./` (`eslint/simple-architecture.js`), for `src/`, `server/` and `shared/`.
@@ -26,27 +26,27 @@ ESLint: `no-restricted-imports` with the pattern `^\.\./` (`eslint/simple-archit
 ## Good
 
 ```ts
-// src/App/ShowsExplorer/ShowsList/ShowCard/types.ts
-import type { Show } from '~shared/api';
+// src/App/Shop/ProductList/ProductCard/types.ts
+import type { Product } from '~shared/api';
 
-// src/App/ShowsExplorer/ShowsList/ShowCard/logic/usePresenter.ts
-import type { Props } from '~/App/ShowsExplorer/ShowsList/ShowCard/types';
+// src/App/Shop/ProductList/ProductCard/logic/usePresenter.ts
+import type { Props } from '~/App/Shop/ProductList/ProductCard/types';
 
-// server/src/tasks/toggleFavorite.ts
-import { addFavorite } from '~/entities/favorites';
+// server/src/tasks/addToCart.ts
+import { addCartItem } from '~/entities/cart';
 ```
 
 ```tsx
-// src/App/ShowsExplorer/ShowsList/ShowsList.tsx
-import { ShowCard } from './ShowCard/ShowCard';
+// src/App/Shop/ProductList/ProductList.tsx
+import { ProductCard } from './ProductCard/ProductCard';
 import type { Props } from './types';
 ```
 
 ## Bad
 
 ```ts
-import type { Show } from '../../types';          // parent via ../
+import type { Product } from '../../types';       // parent via ../
 import type { Props } from '../types';            // the component's types from logic/ via ../ (use ~/)
-import { ShowCard } from '~/App/ShowsExplorer/ShowsList/ShowCard/ShowCard'; // own child via ~/ (use ./)
-import type { Show } from '@/App/ShowsExplorer/types'; // old alias
+import { ProductCard } from '~/App/Shop/ProductList/ProductCard/ProductCard'; // own child via ~/ (use ./)
+import type { Product } from '@/App/Shop/types';  // old alias
 ```

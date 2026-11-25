@@ -44,14 +44,14 @@ No action, reducer, selector or type to add, nothing global to break. Keep the s
 
 ```
 src/entities/
-  store.ts                     # configureStore({ reducer: { favorites, … } }), RootState
-  favorites/
-    favoritesSlice.ts          # createSlice: set-only reducers + selectors of one entity
+  store.ts                     # configureStore({ reducer: { cart, user, … } }), RootState
+  cart/
+    cartSlice.ts               # createSlice: set-only reducers + selectors of one entity
 ```
 
-- One slice per entity, in its own folder. Selectors live next to the slice (`selectFavorites`, `selectIsFavorite(id)`); when they grow, they move to `<entity>Selectors.ts` in the same folder.
-- **Only get/set** ("the store is a database"): set-only reducers (`favoritesReceived(list)`) and selectors. **No logic and no requests** in the store — no async `fetch` methods (as Zustand's docs suggest); loading is a task's job.
-- Actions and selectors exist to **reduce coupling** to the store's shape: callers depend on `selectIsFavorite(id)`, not on `state.favorites.shows`.
+- One slice per entity, in its own folder. Selectors live next to the slice (`selectCartItems`, `selectIsInCart(id)`); when they grow, they move to `<entity>Selectors.ts` in the same folder.
+- **Only get/set** ("the store is a database"): set-only reducers (`cartReceived(items)`) and selectors. **No logic and no requests** in the store — no async `fetch` methods (as Zustand's docs suggest); loading is a task's job.
+- Actions and selectors exist to **reduce coupling** to the store's shape: callers depend on `selectIsInCart(id)`, not on `state.cart.items`.
 - Derived values are selectors, wrapping pure functions kept in the entity folder; `createSelector` when the result is a new object or array.
 - Entities import nothing above them: no React, no components, no tasks, no API (ESLint `deps-entities`).
 - If the server owns the data (favorites), the store is only its **mirror**: the server decides, its answer replaces the slice.
@@ -61,18 +61,12 @@ src/entities/
 | Layer | How |
 |---|---|
 | Presenter (`logic/usePresenter.ts`, hooks) | `useSelector(selectX)` — only presenters that really need global data |
-| Task (`logic/tasks/*`, `tasks/*`) | `import { store } from '~/entities/store'` → `store.dispatch(action)`, `store.getState()` — only for global data, e.g. after `await api.favorites.toggle(id)` |
+| Task (`logic/tasks/*`, `tasks/*`) | `import { store } from '~/entities/store'` → `store.dispatch(action)`, `store.getState()` — only for global data, e.g. after `await api.cart.add(id)` |
 | View | never: it gets everything from its presenter (ESLint `deps-view`) |
 | `src/main.tsx` | `<Provider store={store}>` |
 
 Using the store object directly from a task is an official API of Redux (and of MobX, Zustand). No redux-thunk / saga needed.
 
-## Known deviation: `entities/search`
-
-`src/entities/search/` (slice, selectors, `getSearchStatus` / `getShownAnswer` / `getSelection`, types) holds the **ShowsExplorer search** — the field text, the request and its answer. It is **not global**: only the ShowsExplorer subtree uses it. It was written before this rule and is due to move into the presenter of `ShowsExplorer` (tasks return the page; the presenter keeps it and passes it to `SearchInput`, `GenreChips`, `ResultsStatus`, `ShowsList`, `ResultsPagination` as props).
-
-Do not copy this pattern in new code, and do not extend the search slice.
-
 ## Tests
 
-Use the real store: wrap `renderHook` in a `Provider` (`~/testUtils/storeTestUtils.ts`) and reset the slice in `beforeEach` (`setFavorites([])`). Presenters that keep their data locally need no store in tests at all.
+Use the real store: wrap `renderHook` in a `Provider` (`~/testUtils/storeTestUtils.ts`) and reset the slice in `beforeEach` (e.g. a `setCart([])` helper). Presenters that keep their data locally need no store in tests at all.

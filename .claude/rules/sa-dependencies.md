@@ -64,9 +64,9 @@ The arrows above are imports, but the layers are kept loose by **contracts** —
   if (result.ok) setVideos(result.data); else setError(result.error);
   ```
 
-  Design it from the caller's side first: "what do I want from this task?" — `const { shows, genres } = await loadShowsByQuery({ query })`. While the contract holds, either side changes alone: loading over sockets touches only the task; loading on click instead of on mount touches only the presenter.
+  Design it from the caller's side first: "what do I want from this task?" — `const { products, categories } = await loadProducts({ query })`. While the contract holds, either side changes alone: loading over sockets touches only the task; loading on click instead of on mount touches only the presenter.
 - **View ↔ Presenter.** The View says what it needs to render — `value`, `options`, `onChange`, `disabled` — and the presenter delivers exactly that. The View is markup only; store changes stop at the presenter.
-- **A library behind a module.** The app depends on a small interface of our own, and one module depends on the library: `api.shows.search()` over `callApi`, `tvmaze.shows.get()` over `requestTvmaze`, `debounce` in `lib/`. Replacing the transport or the library touches that module only.
+- **A library behind a module.** The app depends on a small interface of our own, and one module depends on the library: `api.products.search()` over `callApi`, `tvmaze.shows.get()` over `requestTvmaze`, result builders in `lib/taskResult`. Replacing the transport or the library touches that module only.
 
 Contracts also help reading, like links in Wikipedia: `await loadHomePageVideos()` is one line that says what happens; follow the "link" into the task only when *how* matters for your change.
 

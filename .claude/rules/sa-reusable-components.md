@@ -26,30 +26,30 @@ Benefit: deleting a subtree also deletes the reusable components only it used.
 
 ## The same idea for tasks
 
-A task used by one component lives in its `logic/tasks/`. A task reused by several components goes to a `tasks/` folder of their nearest common ancestor (`ShowsExplorer/tasks/`, used only below it), or to the global `src/tasks/` when reused across the app (see `sa-tasks-layer.md`). A reusable component keeps its own tasks inside it: `App/components/FavoriteStar/logic/tasks/toggleFavorite.ts` is used only by `FavoriteStar`, even though `FavoriteStar` itself is used in two places.
+A task used by one component lives in its `logic/tasks/`. A task reused by several components goes to a `tasks/` folder of their nearest common ancestor (e.g. `Catalog/tasks/`, used only below it), or to the global `src/tasks/` when reused across the app (see `sa-tasks-layer.md`). A reusable component keeps its own tasks inside it: `App/components/AddToCartButton/logic/tasks/addToCart.ts` is used only by `AddToCartButton`, even though the button itself is used in two places.
 
 ## Good
 
 ```
 src/
   components/
-    Chip/                     # used by GenreChips and ShowCard
+    Chip/                     # used by CategoryChips and ProductCard
   App/
     components/
-      FavoriteStar/           # used by ShowCard and FavoriteItem, both below App
-    FavoritesButton/FavoritesList/FavoriteItem/
-    ShowsExplorer/
+      AddToCartButton/        # used by ProductCard and WishlistItem, both below App
+    Wishlist/WishlistItem/
+    Shop/
       components/
-        ShowPoster/           # used by ShowCard and ShowDetails, both below
-      ShowsList/ShowCard/
-      ShowDetails/
+        ProductImage/         # used by ProductCard and ProductDetails, both below
+      ProductList/ProductCard/
+      ProductDetails/
 ```
 
 ## Bad
 
 ```
 src/components/
-  ShowsExplorerHeader/        # used only once — belongs in ShowsExplorer/
-App/ShowsExplorer/ShowsList/ShowCard/ShowCard.tsx
+  ShopHeader/                 # used only once — belongs in Shop/
+App/Shop/ProductList/ProductCard/ProductCard.tsx
   → import { Chip } from '~/App/Settings/components/Chip/Chip'  # sideways import
 ```

@@ -9,20 +9,20 @@ paths:
 A component is JSX (View) plus JS logic around it. The JSX stays in the component folder; **all JS logic goes to `logic/`**. Open any component and its logic is always in the same place.
 
 ```
-ShowCard/
-  ShowCard.tsx              # View — JSX only
+ProductCard/
+  ProductCard.tsx           # View — JSX only
   types.ts                  # Props + other types of the component
   styles.module.css
   logic/                    # only if the component has logic
     usePresenter.ts         # Presenter: the bridge between the View and the tasks
-    useFavoriteToggle.ts    # smaller hooks of the presenter
-    formatMeta.ts           # pure helpers
-    formatMeta.test.ts      # tests next to the code they cover
+    useQuantity.ts          # smaller hooks of the presenter
+    formatPrice.ts          # pure helpers
+    formatPrice.test.ts     # tests next to the code they cover
     tasks/                  # only if the component has tasks (business logic)
-      toggleFavorite.ts     # one task = one function
-      searchShows/          # a task that outgrew 120 lines: a folder, still one exported function
-        searchShows.ts
-        buildRequestUrl.ts
+      addToCart.ts          # one task = one function
+      checkout/             # a task that outgrew 120 lines: a folder, still one exported function
+        checkout.ts
+        buildOrder.ts
   ChildComponent/           # child components stay next to logic/, not inside it
 ```
 
@@ -34,19 +34,19 @@ ShowCard/
 ## Imports
 
 - The View imports its presenter as `./logic/usePresenter` (ESLint forbids `./usePresenter`).
-- Files in `logic/` import each other and `logic/tasks/` relatively (`./getSelection`, `./tasks/searchShows`).
-- `logic/` is a subfolder, so the component's own `types.ts` is "outside" for it: import it via `~/` — `import type { Props } from '~/App/ShowsExplorer/ShowsList/ShowCard/types'`. The `../` ban stays (see `sa-imports.md`).
+- Files in `logic/` import each other and `logic/tasks/` relatively (`./formatPrice`, `./tasks/addToCart`).
+- `logic/` is a subfolder, so the component's own `types.ts` is "outside" for it: import it via `~/` — `import type { Props } from '~/App/Shop/ProductList/ProductCard/types'`. The `../` ban stays (see `sa-imports.md`).
 
 ## Reusable tasks
 
-A task used by one component lives in that component's `logic/tasks/`. A task used by several components of one subtree goes to a `tasks/` folder of their nearest common ancestor, next to its `logic/` (`ShowsExplorer/tasks/`); app-wide ones go to `src/tasks/` (same idea as `components/`, see `sa-reusable-components.md`). When its users shrink back to one, move it back.
+A task used by one component lives in that component's `logic/tasks/`. A task used by several components of one subtree goes to a `tasks/` folder of their nearest common ancestor, next to its `logic/` (e.g. `Catalog/tasks/`); app-wide ones go to `src/tasks/` (same idea as `components/`, see `sa-reusable-components.md`). When its users shrink back to one, move it back.
 
 ## Bad
 
 ```
-ShowCard/
+ProductCard/
   usePresenter.ts           # presenter next to the View instead of logic/
-  logic/ShowPoster.tsx      # a component inside logic/
+  logic/ProductImage.tsx    # a component inside logic/
   logic/types.ts            # Props hidden in logic/
-src/tasks/searchShows.ts    # a single-use task in the global folder
+src/tasks/addToCart.ts      # a single-use task in the global folder
 ```
