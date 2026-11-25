@@ -1,9 +1,10 @@
 import { Alert, Button, Text } from '@mantine/core';
 import { usePresenter } from './logic/usePresenter';
 import styles from './styles.module.css';
+import type { Props } from './types';
 
-export function ResultsStatus() {
-  const { variant, errorMessage, emptyMessage, summary, onRetry } = usePresenter();
+export function ResultsStatus(props: Props) {
+  const { variant, errorMessage, emptyMessage, summary, onRetry } = usePresenter(props);
 
   if (variant === 'error') {
     return (

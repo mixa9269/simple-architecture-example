@@ -1,79 +1,62 @@
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  FOREST_SHOWS,
-  flushDebounce,
-  flushRequests,
-  names,
-  resetSearch,
-  run,
-  searchState,
-  stubShowsApi,
-} from '~/App/ShowsExplorer/tasks/searchTestUtils';
-import { selectGenre } from '~/App/ShowsExplorer/tasks/selectGenre';
-import { selectPage } from '~/App/ShowsExplorer/tasks/selectPage';
-import { typeQuery } from '~/App/ShowsExplorer/tasks/typeQuery';
-import { selectSelection, selectShownResult } from '~/entities/search/searchSelectors';
-import { store } from '~/entities/store';
-import { renderHookWithStore } from '~/testUtils/storeTestUtils';
+import { FOREST_SHOWS, flushDebounce, flushRequests, names, stubShowsApi } from './searchTestUtils';
 import { usePresenter } from './usePresenter';
 
-const shown = () => selectShownResult(store.getState());
 const render = (url: string) => {
   window.history.replaceState(null, '', url);
-  return renderHookWithStore(() => usePresenter());
+  return renderHook(() => usePresenter());
 };
 
 beforeEach(() => {
   vi.useFakeTimers();
-  resetSearch();
   stubShowsApi({ forest: FOREST_SHOWS });
 });
 
 afterEach(() => {
-  resetSearch();
   vi.useRealTimers();
   vi.unstubAllGlobals();
   window.history.replaceState(null, '', '/');
 });
 
 describe('ShowsExplorer usePresenter — URL state', () => {
-  it('restores the query, genre and page from the URL', async () => {
-    render('/?q=forest&genre=Drama&page=2');
-    expect(searchState().query).toBe('forest');
-    expect(window.location.search).toBe('?q=forest&genre=Drama&page=2'); // kept while loading
+  it('opens the search from the URL and keeps the URL while it loads', async () => {
+    const { result } = render('/?q=forest&genre=Drama&page=2');
+    expect(result.current.searchInput.value).toBe('forest');
+    expect(window.location.search).toBe('?q=forest&genre=Drama&page=2');
 
     await flushRequests();
 
-    expect(selectSelection(store.getState())).toEqual({ genre: 'Drama', page: 2 });
-    expect(names(shown()?.shows)).toEqual(['Forest 4', 'Forest 5']);
+    expect(result.current.genreChips?.selectedGenre).toBe('Drama');
+    expect(result.current.pagination?.value).toBe(2);
+    expect(names(result.current.showsList.shows)).toEqual(['Forest 4', 'Forest 5']);
     expect(window.location.search).toBe('?q=forest&genre=Drama&page=2');
   });
 
   it('writes what the server applied: an unknown genre and a page out of range are dropped', async () => {
-    render('/?q=forest&genre=Horror&page=9');
+    const { result } = render('/?q=forest&genre=Horror&page=9');
 
     await flushRequests();
 
-    expect(selectSelection(store.getState())).toEqual({ genre: null, page: 3 });
+    expect(result.current.genreChips?.selectedGenre).toBeNull();
     expect(window.location.search).toBe('?q=forest&page=3');
   });
 
-  it('writes the settled search state to the URL', async () => {
-    render('/');
-    await flushRequests();
+  it('writes the settled search and clears the URL with the field', async () => {
+    const { result } = render('/');
 
-    run(() => typeQuery('forest'));
+    act(() => result.current.searchInput.onChange('forest'));
     expect(window.location.search).toBe('');
     await flushDebounce();
     expect(window.location.search).toBe('?q=forest');
 
-    run(() => selectGenre('Drama'));
-    run(() => selectPage(2));
+    act(() => result.current.genreChips?.onChange('Drama'));
+    act(() => result.current.pagination?.onChange(2));
     expect(window.location.search).toBe('?q=forest');
     await flushRequests();
     expect(window.location.search).toBe('?q=forest&genre=Drama&page=2');
 
-    run(() => typeQuery(''));
+    act(() => result.current.searchInput.onClear());
     expect(window.location.search).toBe('');
   });
 });

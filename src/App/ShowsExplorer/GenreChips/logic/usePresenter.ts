@@ -1,22 +1,16 @@
-import { useSelector } from 'react-redux';
-import { selectGenre } from '~/App/ShowsExplorer/tasks/selectGenre';
-import { selectSelection, selectShownResult } from '~/entities/search/searchSelectors';
+import type { Props } from '~/App/ShowsExplorer/GenreChips/types';
 
 const ALL_GENRES = '__all__';
-const NO_GENRES: string[] = [];
 
-export function usePresenter() {
-  const result = useSelector(selectShownResult);
-  const { genre } = useSelector(selectSelection);
-  const genres = result?.genres ?? NO_GENRES;
+export function usePresenter(props: Props) {
+  const { genres, selectedGenre, onChange } = props;
 
   return {
-    isHidden: !result?.total || genres.length === 0,
     items: [
       { value: ALL_GENRES, label: 'All' },
-      ...genres.map((item) => ({ value: item, label: item })),
+      ...genres.map((genre) => ({ value: genre, label: genre })),
     ],
-    value: genre ?? ALL_GENRES,
-    onChange: (value: string) => selectGenre(value === ALL_GENRES ? null : value),
+    value: selectedGenre ?? ALL_GENRES,
+    onChange: (value: string) => onChange(value === ALL_GENRES ? null : value),
   };
 }

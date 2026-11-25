@@ -1,9 +1,9 @@
 import { act } from '@testing-library/react';
 import { vi } from 'vitest';
 import type { Show, ShowsPage } from '~shared/api';
-import { store } from '~/entities/store';
 import { makeShow, okResponse } from '~/testUtils/fixtures';
-import { SEARCH_DEBOUNCE_MS, typeQuery } from './typeQuery';
+import type { SearchUrlState } from './searchUrl';
+import { SEARCH_DEBOUNCE_MS } from './useShowsSearch';
 
 /** Five Drama shows (two pages with Drama selected) and two Comedy shows. */
 export const FOREST_SHOWS = [1, 2, 3, 4, 5]
@@ -15,11 +15,11 @@ export const PINE_SHOWS = [makeShow({ id: 8, name: 'Pine', genres: ['Comedy'] })
 const PAGE_SIZE = 3;
 
 /** What our server answers: a tiny copy of its genre filter and pagination. */
-function fakeShowsPage(
+export function fakeShowsPage(
   query: string,
   found: Show[],
-  genre: string | null,
-  page: number,
+  genre: string | null = null,
+  page = 1,
 ): ShowsPage {
   const genres = [...new Set(found.flatMap((show) => show.genres))].sort();
   const applied = genre && genres.includes(genre) ? genre : null;
@@ -50,19 +50,13 @@ export async function flushDebounce() {
   });
 }
 
-/** Lets the pending requests answer (genre, page and retry requests are not debounced). */
+/** Lets the pending requests answer (genre, page and retry are not debounced). */
 export async function flushRequests() {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(0);
   });
 }
 
-/** Runs a task inside act (a store update re-renders hooks under test). */
-export const run = (task: () => unknown) => act(() => void task());
-
-/** Tests only: empty field, no request, no answer, no pending debounce or load. */
-export const resetSearch = () => typeQuery('');
-
 export const names = (shows: { name: string }[] | undefined) => shows?.map((show) => show.name);
 
-export const searchState = () => store.getState().search;
+export const EMPTY_URL: SearchUrlState = { query: '', genre: null, page: 1 };

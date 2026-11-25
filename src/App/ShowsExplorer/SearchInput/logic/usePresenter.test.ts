@@ -1,51 +1,37 @@
-import { act } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  FOREST_SHOWS,
-  flushDebounce,
-  resetSearch,
-  stubShowsApi,
-} from '~/App/ShowsExplorer/tasks/searchTestUtils';
-import { renderHookWithStore } from '~/testUtils/storeTestUtils';
+import { renderHook } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { usePresenter } from './usePresenter';
 
-const changeEvent = (value: string) =>
-  ({ currentTarget: { value } }) as React.ChangeEvent<HTMLInputElement>;
-
-beforeEach(() => {
-  vi.useFakeTimers();
-  resetSearch();
-  stubShowsApi({ forest: FOREST_SHOWS });
-});
-
-afterEach(() => {
-  resetSearch();
-  vi.useRealTimers();
-  vi.unstubAllGlobals();
+const props = (overrides = {}) => ({
+  value: 'forest',
+  isLoading: false,
+  onChange: vi.fn(),
+  onClear: vi.fn(),
+  ...overrides,
 });
 
 describe('SearchInput usePresenter', () => {
-  it('shows the typed text and loads while the query is not answered yet', async () => {
-    const { result } = renderHookWithStore(() => usePresenter());
+  it('passes the typed text on as a string', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => usePresenter(props({ onChange })));
 
-    act(() => result.current.onChange(changeEvent('forest')));
-    expect(result.current.value).toBe('forest');
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.showClear).toBe(false);
+    result.current.onChange({ currentTarget: { value: 'pine' } } as React.ChangeEvent<HTMLInputElement>);
 
-    await flushDebounce();
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.showClear).toBe(true);
+    expect(onChange).toHaveBeenCalledWith('pine');
   });
 
-  it('clears the field', async () => {
-    const { result } = renderHookWithStore(() => usePresenter());
-    act(() => result.current.onChange(changeEvent('forest')));
-    await flushDebounce();
+  it('shows the clear button only for a typed, settled field', () => {
+    expect(renderHook(() => usePresenter(props())).result.current.showClear).toBe(true);
+    expect(renderHook(() => usePresenter(props({ isLoading: true }))).result.current.showClear).toBe(false);
+    expect(renderHook(() => usePresenter(props({ value: '' }))).result.current.showClear).toBe(false);
+  });
 
-    act(() => result.current.onClear());
+  it('clears the field', () => {
+    const onClear = vi.fn();
+    const { result } = renderHook(() => usePresenter(props({ onClear })));
 
-    expect(result.current.value).toBe('');
-    expect(result.current.showClear).toBe(false);
+    result.current.onClear();
+
+    expect(onClear).toHaveBeenCalledOnce();
   });
 });

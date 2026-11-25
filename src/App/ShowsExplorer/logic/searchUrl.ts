@@ -1,4 +1,4 @@
-import type { SearchStatus } from '~/entities/search/types';
+import type { SearchStatus } from '~/App/ShowsExplorer/types';
 
 /** Search state kept in the URL: ?q=…&genre=…&page=… */
 export interface SearchUrlState {

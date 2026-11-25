@@ -1,9 +1,10 @@
 import { CloseButton, TextInput } from '@mantine/core';
 import { usePresenter } from './logic/usePresenter';
 import styles from './styles.module.css';
+import type { Props } from './types';
 
-export function SearchInput() {
-  const { inputRef, value, isLoading, showClear, onChange, onClear } = usePresenter();
+export function SearchInput(props: Props) {
+  const { inputRef, value, isLoading, showClear, onChange, onClear } = usePresenter(props);
 
   return (
     <TextInput

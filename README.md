@@ -20,7 +20,7 @@ Homework #2 (fullstack):
 - a **5-minute cache** (`const cache = {}`): the same TVmaze request within 5 minutes is answered from memory
 - **favorites**: a star on each show, a toast on add/remove, a header button with the count that opens the list. All favorites logic is on the server (`const favorite = {}`), the Redux store only mirrors it
 - the project follows lecture 2: **Tasks** (business logic), **Entities** (store), `logic/` folders
-- the search lives in the Redux store and is loaded by tasks from the handlers (no `useEffect` loading); the field, chips, status, list and pagination read the store themselves
+- the search state lives in the ShowsExplorer presenter: one task returns the page, the children get it as props (the store holds only the favorites)
 - in the favorites list an unstarred show stays (with an empty star) until the list is reopened, so a misclick can be undone
 - when the free Render backend is waking up (an answer takes longer than 3 s), the search says so instead of looking frozen
 
@@ -67,7 +67,7 @@ Architecture rules for Claude Code live in [`.claude/rules`](.claude/rules):
 - Servers are called through an API object: `api.shows.search()`, `api.favorites.toggle(id)` (`tvmaze.shows.get(id)` on the server)
 - A task is a verb-named arrow function: `try { await api.x.y() } catch (error) { console.error }`, returning `{ ok, data }` / `{ ok: false, error }`; no React, no Mantine; writes the store via `store.dispatch`. The presenter branches on `result.ok`; toasts and navigation stay in the presenter
 - Direction of dependencies: View → Presenter → Tasks → Store, code that changes often depends on code that changes rarely, no import cycles; layers talk through contracts (the presenter designs what it wants from a task, the View what it wants from its presenter)
-- Store = global data only (favorites), get/set, no logic; loading, errors and a screen's data stay in its presenter (the `search` slice is a known deviation, due to move out)
+- Store = global data only (favorites), get/set, no logic; loading, errors and a screen's data stay in its presenter
 - Backend: thin Express routes → tasks (no `express` imports) → in-memory entities. Data rules live on the server, presentation on the client
 - No `setState` during render; requests are objects in state, cancelled with `AbortController`
 - `types.ts` with `Props` next to each component; imports outside the own folder via `~/`, never `../`

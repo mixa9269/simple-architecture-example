@@ -1,15 +1,5 @@
-import { useSelector } from 'react-redux';
-import { retrySearch } from '~/App/ShowsExplorer/tasks/retrySearch';
-import type { ResultsStatusVariant } from '~/App/ShowsExplorer/ResultsStatus/types';
-import {
-  selectIsWaitingForServer,
-  selectSearchError,
-  selectSearchQuery,
-  selectSearchRequest,
-  selectSearchStatus,
-  selectShownAnswer,
-} from '~/entities/search/searchSelectors';
-import type { SearchStatus } from '~/entities/search/types';
+import type { Props, ResultsStatusVariant } from '~/App/ShowsExplorer/ResultsStatus/types';
+import type { SearchStatus } from '~/App/ShowsExplorer/types';
 import { formatSummary } from './formatSummary';
 import { useIsSlow } from './useIsSlow';
 
@@ -26,23 +16,15 @@ function getVariant(
   return status === 'success' ? 'empty' : 'none';
 }
 
-export function usePresenter() {
-  const status = useSelector(selectSearchStatus);
-  const shown = useSelector(selectShownAnswer);
-  const error = useSelector(selectSearchError);
-  const typed = useSelector(selectSearchQuery).trim();
-  const request = useSelector(selectSearchRequest);
-  const isSlow = useIsSlow(request, useSelector(selectIsWaitingForServer));
-  const result = shown?.result ?? null;
-  const totalCount = result?.total ?? 0;
-  // The query and genre of the shown results, not of the ones being typed or loaded.
-  const query = shown?.request.query ?? typed;
+export function usePresenter(props: Props) {
+  const { status, query, genre, error, totalCount, filteredCount, waitingFor, onRetry } = props;
+  const isSlow = useIsSlow(waitingFor, waitingFor !== null);
 
   return {
     variant: getVariant(status, totalCount, isSlow),
     errorMessage: error ?? 'Something went wrong',
     emptyMessage: `Nothing found for “${query}”. Try another title.`,
-    summary: formatSummary(totalCount, result?.filteredTotal ?? 0, result?.genre ?? null),
-    onRetry: retrySearch,
+    summary: formatSummary(totalCount, filteredCount, genre),
+    onRetry,
   };
 }

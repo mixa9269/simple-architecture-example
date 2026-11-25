@@ -1,22 +1,25 @@
+import { Pagination } from '@mantine/core';
 import { GenreChips } from './GenreChips/GenreChips';
 import { usePresenter } from './logic/usePresenter';
-import { ResultsPagination } from './ResultsPagination/ResultsPagination';
 import { ResultsStatus } from './ResultsStatus/ResultsStatus';
 import { SearchInput } from './SearchInput/SearchInput';
 import { ShowsList } from './ShowsList/ShowsList';
 import styles from './styles.module.css';
 
-/** Layout of the search; every part reads the search store and calls its tasks itself. */
 export function ShowsExplorer() {
-  usePresenter();
+  const { searchInput, resultsStatus, genreChips, showsList, pagination } = usePresenter();
 
   return (
     <section className={styles.explorer}>
-      <SearchInput />
-      <ResultsStatus />
-      <GenreChips />
-      <ShowsList />
-      <ResultsPagination />
+      <SearchInput {...searchInput} />
+      <ResultsStatus {...resultsStatus} />
+      {genreChips && <GenreChips {...genreChips} />}
+      <ShowsList {...showsList} />
+      {pagination && (
+        <div className={styles.pagination}>
+          <Pagination {...pagination} withEdges />
+        </div>
+      )}
     </section>
   );
 }
