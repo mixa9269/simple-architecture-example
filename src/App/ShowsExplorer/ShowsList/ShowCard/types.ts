@@ -1,4 +1,4 @@
-import type { Show } from '~/App/ShowsExplorer/types';
+import type { Show } from '~shared/api';
 
 export interface Props {
   show: Show;

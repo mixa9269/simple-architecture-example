@@ -16,8 +16,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Imports outside the own folder: ~/ = src/ (.claude/rules/sa-imports.md) */
-    "paths": { "~/*": ["./src/*"] },
+    /* Imports outside the own folder: ~/ = src/, ~shared/ = shared/ (.claude/rules/sa-imports.md) */
+    "paths": { "~/*": ["./src/*"], "~shared/*": ["./shared/*"] },
 
     /* Linting */
     "noUnusedLocals": true,
@@ -25,5 +25,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "shared"]
 }

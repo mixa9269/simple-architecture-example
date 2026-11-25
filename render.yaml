@@ -1,0 +1,16 @@
+# Render Blueprint for the backend (https://render.com/docs/blueprint-spec).
+# The frontend stays on GitHub Pages and calls this service via VITE_API_URL.
+services:
+  - type: web
+    name: simple-architecture-shows-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm run start:server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      # Origins allowed by CORS (comma-separated): the GitHub Pages site.
+      - key: CORS_ORIGIN
+        value: https://mixa9269.github.io

@@ -11,7 +11,7 @@ A folder named `components/` is a marker: **everything inside is reused in more 
 - **Global:** `src/components/` — reused across the whole app (`Chip`, `Pagination`, `Spinner`, `Modal`).
 - **Local:** a `components/` folder may exist at any level of the tree. Its components are reusable **only below that level**.
 
-Components inside `components/` follow the same folder structure (`Chip/Chip.tsx`, `usePresenter.ts`, `styles.module.css`).
+Components inside `components/` follow the same folder structure (`Chip/Chip.tsx`, `types.ts`, `styles.module.css`, `logic/`).
 
 ## Import direction
 
@@ -24,17 +24,25 @@ A component may import from a `components/` folder that sits in one of its **anc
 
 Benefit: deleting a subtree also deletes the reusable components only it used.
 
+## The same idea for tasks
+
+A task used by one component lives in its `logic/tasks/`. A task reused by several components goes to a `tasks/` folder of their nearest common ancestor (`ShowsExplorer/tasks/`, used only below it), or to the global `src/tasks/` when reused across the app (see `sa-tasks-layer.md`). A reusable component keeps its own tasks inside it: `App/components/FavoriteStar/logic/tasks/toggleFavorite.ts` is used only by `FavoriteStar`, even though `FavoriteStar` itself is used in two places.
+
 ## Good
 
 ```
 src/
   components/
     Chip/                     # used by GenreChips and ShowCard
-  App/ShowsExplorer/
+  App/
     components/
-      ShowPoster/             # used by ShowCard and ShowDetails, both below
-    ShowsList/ShowCard/
-    ShowDetails/
+      FavoriteStar/           # used by ShowCard and FavoriteItem, both below App
+    FavoritesButton/FavoritesList/FavoriteItem/
+    ShowsExplorer/
+      components/
+        ShowPoster/           # used by ShowCard and ShowDetails, both below
+      ShowsList/ShowCard/
+      ShowDetails/
 ```
 
 ## Bad

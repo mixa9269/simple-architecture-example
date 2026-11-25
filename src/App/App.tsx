@@ -1,10 +1,14 @@
 import { Container, Text, Title } from '@mantine/core';
+import { FavoritesButton } from './FavoritesButton/FavoritesButton';
 import { ShowsExplorer } from './ShowsExplorer/ShowsExplorer';
 import styles from './styles.module.css';
 
 export function App() {
   return (
     <Container size="md" className={styles.app}>
+      <div className={styles.toolbar}>
+        <FavoritesButton />
+      </div>
       <header className={styles.header}>
         <Title order={1} className={styles.title}>
           TV Shows Explorer

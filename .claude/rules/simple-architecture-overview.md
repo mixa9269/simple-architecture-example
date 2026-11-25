@@ -1,23 +1,32 @@
----
-description: Simple Architecture (React) — overview of the rules every component in this project must follow
----
-
 # Simple Architecture — overview
 
-This project follows **Simple Architecture**, a React architecture inspired by *Clean Architecture* and iOS **VIPER** (View, Interactor, Presenter, Entity, Router).
+This project follows **Simple Architecture**, a React architecture inspired by *Clean Architecture* and iOS **VIPER**:
 
-Lesson 1 covers only **View** and **Presenter**. Interactor, Entity and Router come in later lessons — do not invent them yet; put all logic in the Presenter layer.
+| Letter | Layer | In this project |
+|---|---|---|
+| **V** | View | the component: JSX + `usePresenter(props)` |
+| **I** | Interactor = use case = **Task** | plain verb-named functions in `logic/tasks/` (or `src/tasks/` when reused); the business logic |
+| **P** | Presenter | `logic/usePresenter.ts` + hooks: UI state, handlers, calling tasks, toasts/navigation |
+| **E** | Entity | the Redux Toolkit store in `src/entities/` |
+| **R** | Router | navigation is environment-specific, so it stays in the presenter (no own layer) |
+
+The app has its own **backend** (`server/`, Express) with the same idea: thin routes → tasks → in-memory entities.
 
 ## Rules
 
 | Rule | File |
 |---|---|
 | A component is View only: JSX + `usePresenter(props)`; no logic → no presenter, texts right in JSX | `sa-view-layer.md` |
-| All logic lives in `usePresenter` and smaller hooks/functions; it takes props whole; no `setState` in render, requests as objects + `AbortController` | `sa-presenter-layer.md` |
-| Max **120 lines** per file (ESLint `max-lines`) | `sa-file-size-120.md` |
-| Each component has its own folder (View, `usePresenter.ts` if logic, `types.ts` with `Props`, one or more `*.module.css`); single-use children nest inside the parent; folders mirror the UI | `sa-component-tree.md` |
-| Own folder and own children via `./`, anything further via `~/` (= `src/`), never `../` | `sa-imports.md` |
-| `components/` folders hold reusable components only, used only below in the tree | `sa-reusable-components.md` |
+| The presenter is the bridge between the View and the tasks: reads the store, calls tasks from handlers (no loading in `useEffect`), toasts; takes props whole; no `setState` in render | `sa-presenter-layer.md` |
+| All JS logic of a component lives in its `logic/` folder; tasks in `logic/tasks/` | `sa-logic-folder.md` |
+| A task = verb-named arrow function: `try { await api.x.y() } catch { log }` → returns `{ ok, data \| error }`; no React, no UI library; writes the store directly | `sa-tasks-layer.md` |
+| Servers are called through an API object `api.<domain>.<method>()` (`tvmaze.*` on the server): thin typed arrows, only tasks call it | `sa-api-layer.md` |
+| Entities = Redux Toolkit store with set-only reducers and selectors; shared UI state (search) lives there too; presenters `useSelector`, tasks `store.dispatch` | `sa-entities.md` |
+| Backend: thin Express routes, tasks without `express`, `const cache = {}` / `const favorite = {}` entities; data rules on the server, presentation on the client | `sa-backend.md` |
+| Max **120 lines** per file (ESLint `max-lines`), frontend and backend | `sa-file-size-120.md` |
+| Each component has its own folder (View, `types.ts` with `Props`, `*.module.css`, `logic/`); single-use children nest inside the parent; folders mirror the UI | `sa-component-tree.md` |
+| Own folder and own children via `./`, anything further via `~/` (= `src/` or `server/src/`), the contract via `~shared/`, never `../` | `sa-imports.md` |
+| `components/` folders hold reusable components only, used only below in the tree (same for `src/tasks/`) | `sa-reusable-components.md` |
 
 Styles: CSS Modules (`styles.module.css`, may be split into several `*.module.css` in one folder) + CSS variables, no preprocessors.
 
@@ -25,38 +34,51 @@ ESLint enforcement: `eslint/simple-architecture.js` (already spread into `eslint
 
 ## UI library: Mantine
 
-- Render Mantine components (`TextInput`, `Chip`, `Pagination`, `Card`, `Skeleton`, …) directly in the View.
-- Mantine hooks (`useDisclosure`, …) are hooks — call them only in a presenter.
-- Homework logic is hand-written: data fetching (no `useQuery`), debounce, pagination, URL state. Don't use `useDebouncedValue` / `usePagination` from `@mantine/hooks` for it.
+- Render Mantine components (`TextInput`, `Chip`, `Pagination`, `Card`, `Drawer`, …) directly in the View.
+- Mantine hooks (`useDisclosure`, …) and `notifications.show` are UI: call them only in a presenter, never in a task.
+- Homework logic is hand-written: data fetching (no `useQuery`), debounce, URL state. Don't use `useDebouncedValue` / `usePagination` from `@mantine/hooks` for it.
 - Style with `className` / `classNames` + CSS Modules and `--mantine-*` variables, not with computed `style` props.
 
-## Project tree (TV Shows Explorer homework)
+## Project tree (TV Shows Explorer)
 
 ```
+shared/api.ts                  # API contract types: Show, ShowsPage, FavoritesAnswer, ToggleFavoriteAnswer
+shared/taskResult.ts           # TaskResult<T, E> = { ok: true, data } | { ok: false, error }
+server/src/                    # backend, see sa-backend.md
+  app.ts, index.ts, routes/, tasks/, lib/, entities/, tvmaze/ (tvmaze.ts = API object)
 src/
-  main.tsx                     # MantineProvider + <App/> (exempt from View rule)
-  theme.ts                     # Mantine createTheme
-  index.css                    # global CSS variables
+  main.tsx                     # Provider(store) + MantineProvider + Notifications + <App/> (exempt from View rule)
+  theme.ts, index.css
+  api/                         # api.ts = { shows, favorites } over callApi.ts (transport)
+  lib/taskResult.ts            # success / failure: builds the result of every task (not a task)
+  lib/debounce.ts              # hand-written debounce with cancel (a utility, not a task)
+  entities/                    # store.ts, favorites/ (slice), search/ (slice, selectors, pure status fns)
+  testUtils/                   # fixtures, renderHookWithStore
   App/
-    App.tsx, styles.module.css   # static header — no presenter
+    App.tsx, styles.module.css # static layout — no presenter
+    components/FavoriteStar/   # reused by ShowCard and FavoriteItem
+      FavoriteStar.tsx, types.ts, styles.module.css
+      logic/usePresenter.ts, getToggleToast.ts, tasks/toggleFavorite.ts
+    FavoritesButton/           # header button with the count + Drawer
+      logic/usePresenter.ts, tasks/loadFavorites.ts
+      FavoritesList/           # keepUnstarred: an unstarred show stays until the Drawer is reopened
+        FavoriteItem/
     ShowsExplorer/
-      ShowsExplorer.tsx, usePresenter.ts, styles.module.css
-      types.ts                 # domain types: Show, SearchRequest, SearchAnswer, TVmaze API
-      useSearchQuery.ts        # field + debounce in the handler → request object, retry
-      useShowsSearch.ts        # loads the request (AbortController), answer, status
-      getSearchStatus.ts, getShownAnswer.ts, searchShows.ts, mapShow.ts
-      useSearchSelection.ts    # genre + page, bound to the request object
-      buildResultsView.ts, collectGenres.ts, filterByGenre.ts, paginate.ts
-      useSearchUrl.ts, searchUrl.ts   # ?q=&genre=&page=
-      testFixtures.ts, presenterTestUtils.ts, *.test.ts
-      SearchInput/             # each child: View + usePresenter.ts + types.ts + styles
-      ResultsStatus/           # + formatSummary.ts
-      GenreChips/
+      ShowsExplorer.tsx, styles.module.css   # layout only
+      logic/
+        usePresenter.ts, useSearchUrl.ts, searchUrl.ts   # restore from / sync to ?q=&genre=&page=
+      tasks/                   # search tasks used by the children below
+        typeQuery.ts           # field text → store; debounced searchShows; empty field clears
+        searchShows.ts, selectGenre.ts, selectPage.ts, retrySearch.ts, restoreSearch.ts
+        loadSearch.ts          # inner: AbortController, requestStarted / answerReceived
+        searchTestUtils.ts, *.test.ts
+      SearchInput/, GenreChips/, ResultsPagination/   # no props: read the store, call tasks
+      ResultsStatus/           # + useIsSlow: "waking up the server" after 3 s
       ShowsList/
         ShowCard/
         ShowCardSkeleton/      # no props, no logic → only View + styles
 ```
 
-Tests (Vitest) live next to the code they cover. They test pure functions and hooks (`renderHook`, including presenters), not Mantine rendering.
+Tests (Vitest) live next to the code they cover: pure functions, hooks and presenters (`renderHook`), tasks with a stubbed `fetch`. No tests of Mantine rendering. Two Vitest projects: `web` (jsdom, `src/`) and `server` (node, `server/`).
 
 Goal of the architecture: minimize the human effort to build **and maintain** the system. When in doubt, choose the option that makes the code easier to change later: more small files, clearer abstractions.
