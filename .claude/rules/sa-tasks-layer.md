@@ -1,5 +1,5 @@
 ---
-description: Simple Architecture — Tasks (Interactor / use case) hold the business logic as verb-named arrow functions that call api.<domain>.<method>() in try/catch, log errors and return { ok, data | error }
+description: Simple Architecture — Tasks (Interactor / use case) hold the business logic as verb-named arrow functions with a contract designed by the presenter; they call api.<domain>.<method>() in try/catch, log errors and return { ok, data | error }; they write the store only for global data
 paths:
   - "src/**/tasks/**"
   - "server/src/tasks/**"
@@ -8,6 +8,23 @@ paths:
 # Tasks: the business logic
 
 A **task** is what the user asks the app to do: search shows, add a show to favorites, log out. In VIPER it is the **Interactor** (Clean Architecture's use case). Its description has no tools in it, so the code doesn't either.
+
+## The contract comes first
+
+A task and its presenter agree on an interface and both depend only on it (dependency inversion, see `sa-dependencies.md`). **The caller designs it**: "what do I pass, what do I want back?" — `const { shows, genres } = await loadShowsByQuery({ query })`. The task fits that contract and hides *how* (HTTP or cache, sockets, mapping, tokens). While the contract holds, the task and the presenter change independently.
+
+**Returning the data is the default.** The task gives the data back; the presenter keeps it in `useState` (see `sa-entities.md`: the data of one screen is not stored globally). A task writes the store **only for global data** — `toggleFavorite` → `favoritesReceived(list)`, because the favorites are read all over the app.
+
+```ts
+// HomePage/logic/tasks/loadHomePageVideos.ts — contract: nothing in, TaskResult<Video[]> out
+export const loadHomePageVideos = async (): Promise<TaskResult<Video[]>> => {
+  try {
+    return success(await api.videos.listRecommended());
+  } catch (error) {
+    return failure(error);
+  }
+};
+```
 
 ## Shape
 
@@ -47,7 +64,7 @@ notifications.show(result.ok ? getToggleToast(result.data.show, result.data.isFa
 ## What a task may use
 
 - The **API object**: `api.*` on the frontend, `tvmaze.*` on the server.
-- **Stores directly**: `import { store } from '~/entities/store'`, then `store.dispatch(…)` / `store.getState()` (see `sa-entities.md`). No redux-thunk, redux-saga or other middlemen.
+- **Stores directly**, for **global data only**: `import { store } from '~/entities/store'`, then `store.dispatch(…)` / `store.getState()` (see `sa-entities.md`). No redux-thunk, redux-saga or other middlemen. Everything else is returned to the presenter.
 - Other tasks, pure helpers, `~shared/*` types.
 - An `AbortSignal` parameter when the work can be cancelled. Pass it to the API method and to `failure(error, signal)`.
 
@@ -57,8 +74,9 @@ notifications.show(result.ok ? getToggleToast(result.data.show, result.data.isFa
 - **No UI library**: no `@mantine/*`. **Toasts, navigation, focus** depend on the environment, so they belong to the presenter. The task returns what happened and the presenter decides how to show it.
 - **No UI state**: loading/disabled flags stay local in the presenter (`useState`). You can `await` a task, so the presenter knows when it finished.
 - **No transport**: no `fetch`, no `callApi`/`requestTvmaze`. Only the API object.
+- **No imports from display**: no presenters or hooks (`use*`), no Views, nothing from a component's `logic/` — display depends on tasks, not the other way round (see `sa-dependencies.md`). A task that needs a value from the presenter gets it as a parameter.
 
-ESLint (`simple-architecture/tasks`, `server-tasks`): React/Mantine imports, `fetch`, the transports and `function` exports are errors in tasks folders.
+ESLint (`simple-architecture/tasks`, `server-tasks`, `deps-tasks`, `deps-server-tasks`): React/Mantine imports, display modules, `fetch`, the transports and `function` exports are errors in tasks folders.
 
 ## Bad
 
@@ -73,7 +91,9 @@ catch (error) { notifications.show(…); }                               // UI i
 
 ## Module state
 
-A task module may keep **non-serializable runtime handles** that can't go to the store: the `AbortController` of the load in progress (`loadSearch.ts`), a debounced function (`typeQuery.ts` → `debounce(searchShows, 400)` from `~/lib/debounce`). Data stays in the store.
+A task module may keep **non-serializable runtime handles**: the `AbortController` of the load in progress, a debounced function (`debounce(searchShows, 400)` from `~/lib/debounce`). Data goes back to the presenter (or to the store when it is global) — not into module variables.
+
+The example below is today's `loadSearch.ts`. It also writes the search into the store — that part is the known deviation from `sa-entities.md`; the module-handle part is the pattern to keep.
 
 ```ts
 // ShowsExplorer/tasks/loadSearch.ts

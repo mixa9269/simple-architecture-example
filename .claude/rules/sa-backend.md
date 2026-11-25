@@ -49,6 +49,17 @@ shared/
 - **External APIs** go through an API object (`tvmaze.shows.search/get`, see `sa-api-layer.md`) over a transport (`requestTvmaze`). Raw API objects are mapped to our types (`mapShow`) before they leave `tasks/`.
 - Time-based rules take `Date.now()` in the task and store timestamps in the entity, so tests can use fake timers.
 
+## Dependency direction
+
+`index.ts → app.ts → routes/ → tasks/ → entities/ · tvmaze/ · lib/` — never backwards (see `sa-dependencies.md`):
+
+- `tasks/` don't import `routes/`, `express`, `cors` or the transport `requestTvmaze` (ESLint `deps-server-tasks`).
+- `entities/` and `tvmaze/` don't import `tasks/` or `routes/` (`deps-server-entities`).
+- `lib/` doesn't import `tasks/`, `routes/` or `entities/` (`deps-server-lib`).
+- No import cycles (`import-x/no-cycle`).
+
+Routes ↔ tasks is a contract too: a route passes parsed input and gets a `TaskResult`; how the task gets the data (cache, TVmaze) is hidden behind it.
+
 ## Frontend vs backend
 
 | Frontend (`src/`) | Backend (`server/`) |

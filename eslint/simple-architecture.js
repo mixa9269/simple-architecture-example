@@ -3,7 +3,10 @@
 //   import simpleArchitecture from './eslint/simple-architecture.js';
 //   export default [...otherConfigs, ...simpleArchitecture];
 // Rules: .claude/rules/sa-file-size-120.md, sa-view-layer.md, sa-presenter-layer.md, sa-imports.md,
-//        sa-logic-folder.md, sa-tasks-layer.md, sa-backend.md
+//        sa-logic-folder.md, sa-tasks-layer.md, sa-backend.md, sa-dependencies.md
+// Import boundaries between layers and the no-cycle check: ./simple-architecture-dependencies.js
+
+import dependencies from './simple-architecture-dependencies.js';
 
 const VIEW_HINT =
   'Simple Architecture: move logic to usePresenter (see .claude/rules/sa-view-layer.md).';
@@ -17,19 +20,6 @@ const PARENT_IMPORTS = {
   message:
     "Simple Architecture: import from outside the own folder via '~/…' (see .claude/rules/sa-imports.md).",
 };
-
-// The presenter lives in the component's logic/ folder (see .claude/rules/sa-logic-folder.md).
-const PRESENTER_OUTSIDE_LOGIC = {
-  regex: '^\\./usePresenter$',
-  message:
-    "Simple Architecture: the presenter lives in logic/ — import it from './logic/usePresenter' (see .claude/rules/sa-logic-folder.md).",
-};
-
-const TASK_HINT =
-  'Simple Architecture: a task is a plain function, independent of React and the UI library; toasts and navigation belong to the presenter (see .claude/rules/sa-tasks-layer.md).';
-
-const SERVER_TASK_HINT =
-  'Simple Architecture: server tasks and entities do not know about HTTP — parse the request and send the response in routes/ (see .claude/rules/sa-backend.md).';
 
 const API_HINT =
   'Simple Architecture: tasks call the API object — `await api.shows.search(…)` / `await tvmaze.shows.get(id)` (see .claude/rules/sa-api-layer.md).';
@@ -46,19 +36,6 @@ const ARROW_ONLY = [
 
 const ALL_CODE = ['src/**/*.{js,jsx,ts,tsx}', 'server/**/*.ts', 'shared/**/*.ts'];
 
-const REACT_HOOKS = [
-  'useState',
-  'useEffect',
-  'useLayoutEffect',
-  'useMemo',
-  'useCallback',
-  'useRef',
-  'useReducer',
-  'useContext',
-  'useTransition',
-  'useDeferredValue',
-  'useSyncExternalStore',
-];
 
 export default [
   {
@@ -122,20 +99,6 @@ export default [
           message: `Pass the whole props object to usePresenter. ${PROPS_HINT}`,
         },
       ],
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: 'react',
-              importNames: REACT_HOOKS,
-              message: `React hooks are not allowed in a View. ${VIEW_HINT}`,
-            },
-          ],
-          // Repeated here: this config replaces 'simple-architecture/imports' for View files.
-          patterns: [PARENT_IMPORTS, PRESENTER_OUTSIDE_LOGIC],
-        },
-      ],
     },
   },
   {
@@ -143,16 +106,6 @@ export default [
     files: ['src/**/tasks/**/*.{js,ts}'],
     ignores: ['**/*.test.{js,ts}', '**/*TestUtils.{js,ts}'],
     rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            ...['react', 'react-dom', 'react-redux'].map((name) => ({ name, message: TASK_HINT })),
-            { name: '~/api/callApi', message: API_HINT },
-          ],
-          patterns: [PARENT_IMPORTS, { group: ['@mantine/*'], message: TASK_HINT }],
-        },
-      ],
       'no-restricted-globals': NO_FETCH,
       'no-restricted-syntax': ARROW_ONLY,
     },
@@ -162,16 +115,6 @@ export default [
     files: ['server/src/tasks/**/*.ts', 'server/src/entities/**/*.ts'],
     ignores: ['**/*.test.ts', '**/*TestUtils.ts'],
     rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            ...['express', 'cors'].map((name) => ({ name, message: SERVER_TASK_HINT })),
-            { name: '~/tvmaze/requestTvmaze', importNames: ['requestTvmaze'], message: API_HINT },
-          ],
-          patterns: [PARENT_IMPORTS],
-        },
-      ],
       'no-restricted-globals': NO_FETCH,
     },
   },
@@ -187,4 +130,5 @@ export default [
     ignores: ['**/*.test.ts', '**/*TestUtils.ts'],
     rules: { 'no-restricted-syntax': ARROW_ONLY },
   },
+  ...dependencies,
 ];

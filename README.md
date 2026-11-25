@@ -66,12 +66,13 @@ Architecture rules for Claude Code live in [`.claude/rules`](.claude/rules):
 - All JS logic of a component lives in its `logic/` folder; business logic in `logic/tasks/`, reusable tasks in `src/tasks/`
 - Servers are called through an API object: `api.shows.search()`, `api.favorites.toggle(id)` (`tvmaze.shows.get(id)` on the server)
 - A task is a verb-named arrow function: `try { await api.x.y() } catch (error) { console.error }`, returning `{ ok, data }` / `{ ok: false, error }`; no React, no Mantine; writes the store via `store.dispatch`. The presenter branches on `result.ok`; toasts and navigation stay in the presenter
-- Store = domain data only (no loading flags); presenters `useSelector`, tasks dispatch directly (no thunks)
+- Direction of dependencies: View → Presenter → Tasks → Store, code that changes often depends on code that changes rarely, no import cycles; layers talk through contracts (the presenter designs what it wants from a task, the View what it wants from its presenter)
+- Store = global data only (favorites), get/set, no logic; loading, errors and a screen's data stay in its presenter (the `search` slice is a known deviation, due to move out)
 - Backend: thin Express routes → tasks (no `express` imports) → in-memory entities. Data rules live on the server, presentation on the client
 - No `setState` during render; requests are objects in state, cancelled with `AbortController`
 - `types.ts` with `Props` next to each component; imports outside the own folder via `~/`, never `../`
 - Max 120 lines per file; tree-shaped component folders; `components/` folders hold reusable components only
 
-ESLint enforcement ([`eslint/simple-architecture.js`](eslint/simple-architecture.js)): file size, hooks in Views, whole props, `../` imports, the presenter in `logic/`, no React/Mantine/`fetch`/transport in tasks, arrow functions in tasks and API objects, no Express in server tasks/entities.
+ESLint enforcement ([`eslint/simple-architecture.js`](eslint/simple-architecture.js)): file size, hooks in Views, whole props, `../` imports, the presenter in `logic/`, no React/Mantine/`fetch`/transport in tasks, arrow functions in tasks and API objects, no Express in server tasks/entities; per-layer import boundaries and `import-x/no-cycle` ([`eslint/simple-architecture-dependencies.js`](eslint/simple-architecture-dependencies.js)).
 
 Course materials are kept locally in `course-materials/` (git-ignored).

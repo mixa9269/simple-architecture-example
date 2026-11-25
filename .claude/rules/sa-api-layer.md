@@ -11,6 +11,8 @@ paths:
 
 A task talks to a server through an **API object**, grouped by domain. The task reads like the use case: `await api.favorites.toggle(id)`. It doesn't say how the request travels (HTTP, headers, base URL, query string).
 
+This is **dependency inversion** for libraries and transports (see `sa-dependencies.md`): the app depends on a small interface of our own (`api.shows.search(query, signal)`), and only one module — the transport `callApi` / `requestTvmaze` — knows `fetch`, URLs and headers. Moving to another HTTP client, adding a token or switching to sockets touches that module only; the tasks, presenters and Views keep working.
+
 ## Frontend: `src/api/`
 
 ```

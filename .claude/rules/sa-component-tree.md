@@ -54,7 +54,7 @@ App/
     tasks/                # search tasks reused by the children below
       typeQuery.ts, selectGenre.ts, selectPage.ts, loadSearch.ts
     SearchInput/
-      SearchInput.tsx     # no props: reads the store through its presenter
+      SearchInput.tsx     # today reads the search slice: known deviation (sa-entities.md)
       styles.module.css
       logic/usePresenter.ts
     ShowsList/

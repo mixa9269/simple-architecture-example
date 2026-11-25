@@ -8,6 +8,17 @@ paths:
 
 Every React component is the **View** layer. It contains JSX and, if the component has logic, a call to its own `usePresenter(props)` hook from `./logic/usePresenter` (see `sa-logic-folder.md`). No other JS logic — no `useState`/`useEffect`/other hooks, no computations, no handlers with bodies, no data fetching.
 
+## The View ↔ Presenter contract
+
+The View and its presenter are bound by a **contract** (dependency inversion, see `sa-dependencies.md`): the View says what it needs to render — `value`, `options`, `onChange`, `disabled`, `isHidden` — and the presenter delivers exactly that, already formatted. The View does not know *when* something is disabled or *what* happens on change; it is **markup only**: layout and which component to show. Changes in the store or in tasks stop at the presenter and don't reach the View.
+
+```tsx
+export function ResourceTypeSelect(props: Props) {
+  const { value, options, disabled, onChange } = usePresenter(props);
+  return <Select value={value} data={options} disabled={disabled} onChange={onChange} />;
+}
+```
+
 ## Components without logic
 
 Static texts, layout and constant lists are UI, not logic: write them directly in JSX, with no `logic/` folder. A module-level constant rendered with `map` is fine.
@@ -39,7 +50,7 @@ ESLint: destructured component params and `usePresenter(anythingButProps)` are e
 - child components (nested folders, or `components/` above in the tree via `~/`)
 - UI-library components (Mantine)
 
-Never in a View: tasks, the store (`useSelector`, `store`), `api.*`, `notifications`. They are reached through the presenter.
+Never in a View: tasks, the store (`useSelector`, `store`, `~/entities/*`), `api.*`, `react-redux`, `notifications`. They are reached through the presenter. ESLint `deps-view` (imports) and `simple-architecture/view-layer` (hook calls).
 
 ## Good
 
