@@ -35,5 +35,5 @@ export function setFavorites(shows: Show[]) {
 
 /** Tests only: logs the given email in (or out with null) without the server. */
 export function setSession(email: string | null) {
-  store.dispatch(email ? sessionStarted(email) : sessionEnded());
+  store.dispatch(email ? sessionStarted({ email }) : sessionEnded());
 }

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { selectUserEmail } from '~/entities/session/sessionSlice';
 import { store } from '~/entities/store';
 import { makeShow } from '~/testUtils/fixtures';
 import { setFavorites, setSession } from '~/testUtils/storeTestUtils';
@@ -21,12 +22,12 @@ describe('session tasks', () => {
     saveEmail('ann@mail.com');
 
     expect(restoreSession()).toEqual({ ok: true, data: 'ann@mail.com' });
-    expect(store.getState().session.email).toBe('ann@mail.com');
+    expect(selectUserEmail(store.getState())).toBe('ann@mail.com');
   });
 
   it('stays a guest when nothing was saved', () => {
     expect(restoreSession()).toEqual({ ok: true, data: null });
-    expect(store.getState().session.email).toBeNull();
+    expect(selectUserEmail(store.getState())).toBeNull();
   });
 
   it('logs out: forgets the email and drops the favorites from the store', () => {
@@ -36,7 +37,7 @@ describe('session tasks', () => {
 
     logOut();
 
-    expect(store.getState().session.email).toBeNull();
+    expect(selectUserEmail(store.getState())).toBeNull();
     expect(store.getState().favorites.shows).toEqual([]);
     expect(readSavedEmail()).toBeNull();
   });

@@ -2,6 +2,7 @@ import { notifications } from '@mantine/notifications';
 import { act, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { errorResponse, makeShow, okResponse } from '~/testUtils/fixtures';
+import { selectUserEmail } from '~/entities/session/sessionSlice';
 import { store } from '~/entities/store';
 import { renderHookWithStore, setFavorites, setSession } from '~/testUtils/storeTestUtils';
 import { usePresenter } from './usePresenter';
@@ -66,7 +67,7 @@ describe('FavoritesButton usePresenter', () => {
 
     renderHookWithStore(() => usePresenter());
 
-    await waitFor(() => expect(store.getState().session.email).toBeNull());
+    await waitFor(() => expect(selectUserEmail(store.getState())).toBeNull());
     vi.restoreAllMocks();
   });
 });

@@ -38,6 +38,7 @@ ESLint: hook calls in a View are errors (`simple-architecture/view-layer`); `rea
 - **Go to a page from a handler**: `onLogIn: () => navigate('/login', { state: { from: currentPath } })`.
 - **Come back after a detour** (e.g. login): pass `state.from` (`pathname + search` of the current page), read it on the target page with a small pure function that only accepts internal paths (`getReturnPath(location.state)`), fall back to `/`.
 - **Redirect driven by state**: when a store change decides the page (logged in → leave the login page), the presenter returns `redirectTo` and the View renders `<Navigate to={redirectTo} replace />`. No imperative `navigate` racing the re-render.
+- **The URL is an output, not a trigger.** A handler changes the state and calls the task itself (`onGenreChange → load({ …params, genre })`); the URL follows the state. Never a chain "handler changes the URL → an effect sees it → load": it is harder to follow and loads twice on mistakes.
 - **URL state** (`?q=&genre=&page=`) is read and written through `useSearchParams` — the initial state from it on the first render, updates with `setSearchParams(…, { replace: true })`. Never `window.location` / `history` directly: with `HashRouter` the query lives inside the hash.
 - **Tests**: presenters that navigate are rendered inside `MemoryRouter` (`renderHookInRouter(hook, url, state)` in `src/testUtils/`), and assert on the returned `location`.
 

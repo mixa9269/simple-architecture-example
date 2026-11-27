@@ -1,6 +1,7 @@
 import { notifications } from '@mantine/notifications';
 import { act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { selectUserEmail } from '~/entities/session/sessionSlice';
 import { store } from '~/entities/store';
 import { renderHookInRouter, setSession } from '~/testUtils/storeTestUtils';
 import { usePresenter } from './usePresenter';
@@ -32,7 +33,7 @@ describe('AccountBar usePresenter', () => {
 
     act(() => result.current.onLogOut());
 
-    expect(store.getState().session.email).toBeNull();
+    expect(selectUserEmail(store.getState())).toBeNull();
     expect(result.current.email).toBeNull();
     expect(notifications.show).toHaveBeenCalledWith(expect.objectContaining({ title: 'Logged out' }));
   });

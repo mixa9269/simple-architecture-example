@@ -1,6 +1,7 @@
 import { notifications } from '@mantine/notifications';
 import { act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { selectUserEmail } from '~/entities/session/sessionSlice';
 import { store } from '~/entities/store';
 import { errorResponse, makeShow } from '~/testUtils/fixtures';
 import {
@@ -51,7 +52,8 @@ describe('FavoriteStar usePresenter — session', () => {
 
     await act(() => result.current.onToggle());
 
-    expect(store.getState().session.email).toBeNull();
+    expect(selectUserEmail(store.getState())).toBeNull();
+    expect(store.getState().favorites.shows).toEqual([]); // the optimistic add is gone too
     expect(notifications.show).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Please log in again' }),
     );

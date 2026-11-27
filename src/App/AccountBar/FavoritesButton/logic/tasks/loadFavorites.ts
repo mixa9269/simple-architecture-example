@@ -1,5 +1,6 @@
 import { api, HttpError } from '~/api/api';
 import { favoritesReceived } from '~/entities/favorites/favoritesSlice';
+import { selectUserEmail } from '~/entities/session/sessionSlice';
 import { store } from '~/entities/store';
 import { failure, success, type TaskResult } from '~/lib/taskResult';
 import { logOut } from '~/tasks/logOut';
@@ -9,7 +10,7 @@ import { logOut } from '~/tasks/logOut';
  * A server that no longer knows the user (e.g. after a restart) ends the session.
  */
 export const loadFavorites = async (signal: AbortSignal): Promise<TaskResult<null>> => {
-  const user = store.getState().session.email;
+  const user = selectUserEmail(store.getState());
   if (!user) return success(null);
 
   try {

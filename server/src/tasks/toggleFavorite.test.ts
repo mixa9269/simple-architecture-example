@@ -58,6 +58,16 @@ describe('toggleFavorite', () => {
     expect(result.ok && names(result.data.shows)).toEqual(['Show 5', 'Show 2', 'Show 9']);
   });
 
+  it('puts a show removed and added again first', async () => {
+    await toggleFavorite(USER, 9);
+    await toggleFavorite(USER, 2);
+    await toggleFavorite(USER, 9); // removed
+    await toggleFavorite(USER, 9); // added again
+
+    const result = getFavorites(USER);
+    expect(result.ok && names(result.data.shows)).toEqual(['Show 9', 'Show 2']);
+  });
+
   it('logs a TVmaze failure and reports its kind', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.stubGlobal('fetch', vi.fn(async () => errorResponse(404)));

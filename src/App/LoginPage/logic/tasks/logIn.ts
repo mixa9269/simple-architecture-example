@@ -13,7 +13,7 @@ export const logIn = async (email: string): Promise<TaskResult<User>> => {
   try {
     const { user } = await api.auth.login(email);
     saveEmail(user.email);
-    store.dispatch(sessionStarted(user.email));
+    store.dispatch(sessionStarted(user));
     return success(user);
   } catch (error) {
     return failure(error);

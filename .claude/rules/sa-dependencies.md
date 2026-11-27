@@ -68,6 +68,8 @@ The arrows above are imports, but the layers are kept loose by **contracts** —
 - **View ↔ Presenter.** The View says what it needs to render — `value`, `options`, `onChange`, `disabled` — and the presenter delivers exactly that. The View is markup only; store changes stop at the presenter.
 - **A library behind a module.** The app depends on a small interface of our own, and one module depends on the library: `api.products.search()` over `callApi`, `tvmaze.shows.get()` over `requestTvmaze`, result builders in `lib/taskResult`. Replacing the transport or the library touches that module only.
 
+**Objects in contracts.** Pass and return objects where a contract may grow: `sessionStarted(user)`, `signIn({ user })`, `loadProducts({ query })`, `return success({ show, isFavorite })`. A new field then extends the contract without breaking any caller, and the call site names what it passes. A single primitive is fine when it will stay one (`removeFromCart(id)`).
+
 Contracts also help reading, like links in Wikipedia: `await loadHomePageVideos()` is one line that says what happens; follow the "link" into the task only when *how* matters for your change.
 
 ## Identity goes down as a parameter

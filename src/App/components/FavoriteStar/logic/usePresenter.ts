@@ -22,10 +22,12 @@ export function usePresenter(props: Props) {
     navigate('/login', { state: { from: `${location.pathname}${location.search}` } });
   };
 
-  // The task does the work and reports the result; the toast is the UI's reaction, so it lives here.
+  // The task flips the star at once and reports the server's answer; the toast is the UI's reaction.
+  // One request per star at a time: clicks while the server answers are ignored.
   const toggle = async () => {
+    if (isPending) return;
     setIsPending(true);
-    const result = await toggleFavorite(show.id);
+    const result = await toggleFavorite(show);
     setIsPending(false);
     notifications.show(
       result.ok

@@ -14,7 +14,7 @@ export function FavoriteStar(props: Props) {
       radius="xl"
       aria-label={label}
       aria-pressed={isFavorite}
-      loading={isPending}
+      aria-busy={isPending}
       onClick={onToggle}
     >
       <svg className={isFavorite ? styles.filled : styles.icon} viewBox="0 0 24 24" aria-hidden="true">

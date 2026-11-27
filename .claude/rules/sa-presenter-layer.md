@@ -14,7 +14,7 @@ A component **with logic** has a `logic/usePresenter.ts` hook (see `sa-logic-fol
 | handlers: `onAddToCart`, `onPageChange` | `addToCart(id)`, `loadProducts(params, signal)` |
 | toasts, navigation (`useNavigate`, see `sa-routing.md`), focus (they depend on the environment) | returns `{ ok, data }` / `{ ok: false, error }`; no React, no Mantine |
 | branches on `result.ok` | catches and logs its own errors |
-| keeps the screen's data from tasks (`useState`); reads global data (`useSelector`) | returns data; writes the store only for global data (`store.dispatch`) |
+| keeps the screen's data from tasks (`useState`); reads global data (`useSelector`); may `dispatch` a set-only action for a trivial UI change | returns data; writes the store for global data (`store.dispatch`) |
 
 A component **without logic** (static texts, layout, a constant list rendered with `map`) has no presenter: keep it simple, write it in JSX (see `sa-view-layer.md`).
 
@@ -97,7 +97,7 @@ Reference implementation in this repo: `src/App/ShowsExplorer/logic/` (`useShows
 Keep the data flow simple and predictable:
 
 - **Data is loaded through tasks**, from the handler that caused it (`onChange → loadPage(page)`) or once on mount (`useEffect` → task → `setState` in `.then`). Not in an effect reacting to state that a handler could have handled.
-- **`useEffect` only for mount/startup and subscriptions/timers**: the first load, restoring from the URL, syncing the URL, a "slow request" timer.
+- **`useEffect` only for mount/startup and subscriptions/timers**: the first load, restoring from the URL, syncing the URL, a "slow request" timer. Never to react to the URL or to state that a handler could have handled: the URL is an output of the state (see `sa-routing.md`).
 - **No `setState` during render.** Not even guarded by a condition — it is easy to loop and hard to read.
 - **In an effect, `setState` only in async callbacks** (`.then`, a timer callback), never synchronously in its body.
 - **Debounce in the handler**: a timer in `useRef`, cleared on every change and on unmount; when it fires it calls the load.
@@ -126,6 +126,10 @@ useEffect(() => {
 }, []);
 ```
 
+## Writing the store directly
+
+A task is for a use case. A **trivial UI change** with no business meaning — open the drawer, collapse the sidebar — needs no task: the presenter dispatches the set-only action itself (`dispatch(drawerOpened(true))` with `useDispatch`). As soon as the write has a rule (a server call, a check, a computation), it is a task.
+
 ## Bad
 
 - `export function usePresenter({ show }: Props)` — props destructured in the signature.
@@ -134,7 +138,7 @@ useEffect(() => {
 - `if (!query && result) setResult(null);` in the hook body — reset in the handler instead.
 - Several "is this answer current?" mechanisms at once (`AbortController` + `requestKey` + answer ids).
 - One 250-line `usePresenter` with search, debounce, abort, pagination and filtering all inline.
-- `fetch`/`callApi`/`api.*` or `store.dispatch` right in the presenter: that is a task's job.
+- `fetch`/`callApi`/`api.*` or a business rule right in the presenter: that is a task's job. A direct `dispatch` is fine only for a trivial UI change (see below).
 - `try { await task() } catch {…}` in the presenter: tasks report errors in their result.
 - `useEffect(() => { load(request) }, [request])`: load from the handler that changed the request.
 - Putting a screen's data, loading flag or error into the store so that children can read it — keep it in the owning presenter and pass props.
@@ -147,5 +151,5 @@ useEffect(() => {
 
 - Presenter exists only if the component has logic; it returns only what the View renders or calls.
 - One concern per hook/function file; name it after the concern.
-- Server calls and store writes go through tasks; toasts/navigation stay here.
+- Server calls and store writes with any rule go through tasks; toasts/navigation stay here.
 - Each file stays under 120 lines (see `sa-file-size-120.md`).

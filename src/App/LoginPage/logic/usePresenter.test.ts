@@ -2,6 +2,7 @@ import { notifications } from '@mantine/notifications';
 import { act } from '@testing-library/react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { selectUserEmail } from '~/entities/session/sessionSlice';
 import { store } from '~/entities/store';
 import { readSavedEmail } from '~/tasks/savedSession';
 import { errorResponse, okResponse } from '~/testUtils/fixtures';
@@ -40,7 +41,7 @@ describe('LoginPage usePresenter', () => {
 
     await act(() => result.current.onSubmit(submit));
 
-    expect(store.getState().session.email).toBe('ann@mail.com');
+    expect(selectUserEmail(store.getState())).toBe('ann@mail.com');
     expect(readSavedEmail()).toBe('ann@mail.com');
     expect(result.current.redirectTo).toBe('/?q=dark');
     expect(notifications.show).toHaveBeenCalledWith(expect.objectContaining({ title: 'Logged in' }));
@@ -55,7 +56,7 @@ describe('LoginPage usePresenter', () => {
     await act(() => result.current.onSubmit(submit));
 
     expect(result.current).toMatchObject({ error: 'Enter a valid email', redirectTo: null });
-    expect(store.getState().session.email).toBeNull();
+    expect(selectUserEmail(store.getState())).toBeNull();
   });
 
   it('leaves the page at once for a user who is already logged in', () => {

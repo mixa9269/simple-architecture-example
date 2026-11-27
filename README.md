@@ -29,6 +29,7 @@ Homework #3 (authentication & personal favorites):
 - a **login page** (`#/login`) with one field, email — no password, no sign-up; the backend checks and normalizes the email (`POST /api/login`)
 - the header shows the logged-in **email** and a **Log out** button; the session survives a reload (the email is saved on the device)
 - **personal favorites**: kept on the server per user (`favorite[email][showId]`, plain objects in memory); logging out and back in with the same email brings them back
+- stars react **instantly** (optimistic UI): the store changes before the server answers, the answer replaces it, a failure rolls the star back
 - a **guest** can search and browse; a star shows a toast and leads to the login page, and after login the user comes back to the same search
 - routing with `react-router` (`HashRouter`, so a reload works on GitHub Pages); navigation lives in presenters
 

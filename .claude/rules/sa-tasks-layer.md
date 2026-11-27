@@ -63,7 +63,7 @@ notifications.show(result.ok ? getAddedToast(result.data) : getErrorToast(result
 
 ## Session-aware tasks
 
-- A task that acts **for the user** reads the identity from the store (`store.getState().session.email`) and passes it to the API. Without a user it doesn't call the server: it returns a result ("Log in to add favorites"), and the **presenter** decides what to do (toast + go to the login page).
+- A task that acts **for the user** reads the identity from the store through a selector (`selectUserEmail(store.getState())`) and passes it to the API. Without a user it doesn't call the server: it returns a result ("Log in to add favorites"), and the **presenter** decides what to do (toast + go to the login page).
 - **401** means the server no longer knows the user (e.g. after a restart): the task ends the session (`logOut()`) and reports "Please log in again".
 - App-wide tasks live in `src/tasks/` (`restoreSession`, `logOut`): called from several places (`main.tsx`, the account bar, the favorites tasks).
 
@@ -71,8 +71,32 @@ notifications.show(result.ok ? getAddedToast(result.data) : getErrorToast(result
 // src/tasks/restoreSession.ts — global task, called once from main.tsx before the first render
 export const restoreSession = (): TaskResult<string | null> => {
   const email = readSavedEmail();
-  if (email) store.dispatch(sessionStarted(email));
+  if (email) store.dispatch(sessionStarted({ email }));
   return success(email);
+};
+```
+
+## Optimistic updates
+
+When the UI should react at once (a star, a like), the task writes the expected global data **before** the request, lets the server's answer replace it, and on an error rolls back only its own change. The presenter still awaits the result for the toast.
+
+```ts
+// FavoriteButton/logic/tasks/toggleFavorite.ts — takes the whole item: an optimistic add needs it
+const flip = (item: Item) =>
+  store.dispatch(favoritesReceived(toggleInList(selectFavorites(store.getState()), item)));
+
+export const toggleFavorite = async (item: Item): Promise<TaskResult<ToggleResult>> => {
+  const user = selectUserEmail(store.getState());
+  if (!user) return { ok: false, error: 'Log in to add favorites' };
+  flip(item);                                       // the UI changes now
+  try {
+    const answer = await api.favorites.toggle(user, item.id);
+    store.dispatch(favoritesReceived(answer.favorites)); // the server decides
+    return success(answer);
+  } catch (error) {
+    flip(item);                                     // roll back this item only
+    return failure(error);
+  }
 };
 ```
 

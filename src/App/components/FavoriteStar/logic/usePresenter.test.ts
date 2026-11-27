@@ -56,17 +56,22 @@ describe('FavoriteStar usePresenter', () => {
     );
   });
 
-  it('is pending while the server answers, then logs the failure and shows an error toast', async () => {
+  it('fills the star at once, ignores clicks while pending, rolls back on a failure', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     let answer: (response: Response) => void = () => {};
-    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((resolve) => (answer = resolve))));
+    const fetchMock = vi.fn(() => new Promise<Response>((resolve) => (answer = resolve)));
+    vi.stubGlobal('fetch', fetchMock);
     const { result } = render();
 
     let toggled: Promise<void> | void = Promise.resolve();
     act(() => {
       toggled = result.current.onToggle();
     });
+    expect(result.current.isFavorite).toBe(true); // before the server answers
     expect(result.current.isPending).toBe(true);
+
+    await act(() => result.current.onToggle());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       answer(errorResponse(502, { error: 'TVmaze is down' }));
@@ -75,10 +80,32 @@ describe('FavoriteStar usePresenter', () => {
 
     expect(result.current.isPending).toBe(false);
     expect(result.current.isFavorite).toBe(false);
+    expect(store.getState().favorites.shows).toEqual([]);
     expect(notifications.show).toHaveBeenCalledWith(
       expect.objectContaining({ color: 'red', message: 'TVmaze is down' }),
     );
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  it('rolls back only its own show', async () => {
+    const other = makeShow({ id: 9, name: 'Fargo' });
+    let answer: (response: Response) => void = () => {};
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((resolve) => (answer = resolve))));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { result } = render();
+
+    let toggled: Promise<void> | void = Promise.resolve();
+    act(() => {
+      toggled = result.current.onToggle();
+    });
+    act(() => setFavorites([other, show])); // another star was toggled meanwhile
+    await act(async () => {
+      answer(errorResponse(502, { error: 'TVmaze is down' }));
+      await toggled;
+    });
+
+    expect(store.getState().favorites.shows).toEqual([other]);
+    vi.restoreAllMocks();
   });
 });

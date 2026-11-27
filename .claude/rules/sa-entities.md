@@ -25,7 +25,7 @@ Test: *would two independent screens or features read it?* If not, it does not g
 
 - loading flags and errors of a request;
 - the data of one screen or one subtree (search results, a form, a list's page and filter);
-- UI state (a drawer's `opened`, a star's `isPending`, a timer).
+- UI state (a drawer's `opened`, a star's `isPending`, a timer) — unless distant components share it (see below).
 
 The task **returns** that data; the presenter of the component that owns it keeps it in `useState` and passes it down as props (see `sa-presenter-layer.md`, `sa-tasks-layer.md`):
 
@@ -39,6 +39,10 @@ if (result.ok) setVideos(result.data); else setError(result.error);
 ```
 
 No action, reducer, selector or type to add, nothing global to break. Keep the store small enough that anyone sees at a glance what is global — about a dozen entities for a whole app.
+
+## Small stores for shared UI state
+
+UI state is local by default. When **distant** components need the same UI state — a button in the header opens a drawer rendered elsewhere — passing it through many levels of props couples every component on the way. Then a **small store of one concern** is the simpler option: a tiny slice (`entities/favoritesDrawer/`: `isOpen`, `drawerOpened(bool)`) or a feature store. Only the components that need it read it, and their presenters write it directly (`sa-presenter-layer.md`, "Writing the store directly"). Keep it tiny: one concern, set-only, no data that belongs to one screen.
 
 ## Shape
 
@@ -55,10 +59,11 @@ src/entities/
 - Derived values are selectors, wrapping pure functions kept in the entity folder; `createSelector` when the result is a new object or array.
 - Entities import nothing above them: no React, no components, no tasks, no API (ESLint `deps-entities`).
 - If the server owns the data (favorites), the store is only its **mirror**: the server decides, its answer replaces the slice.
+- **Optimistic updates** (the UI reacts before the server answers): the task writes the expected value first, the server's answer replaces it, and on an error the task rolls back **only its own change** (re-apply the inverse to the current state, not a snapshot — other changes may have happened meanwhile). See `sa-tasks-layer.md`.
 
 ## The session
 
-The logged-in user is the textbook global entity (`entities/session/`: `email | null`, `sessionStarted`, `sessionEnded`, `selectIsLoggedIn`).
+The logged-in user is the textbook global entity (`entities/session/`: `user: User | null`, `sessionStarted(user)`, `sessionEnded`, `selectUserEmail`, `selectIsLoggedIn`). The payload is an object, so a new field (a name, an avatar) doesn't break the callers.
 
 - **Surviving a reload**: the email is saved through `lib/storage` (a localStorage wrapper) by the login task, and a global task `restoreSession()` is called once from `main.tsx` **before the first render** — so the UI never flashes "Log in" for a logged-in user.
 - **Logout** is a task too (`src/tasks/logOut.ts`): forget the saved email, `sessionEnded()`, and clear the user's data in the store (`favoritesReceived([])`). Data that belongs to the user lives on the server and comes back with the next login.

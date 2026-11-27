@@ -1,9 +1,10 @@
 import type { ToggleFavoriteAnswer } from '~shared/api';
-import { addFavorite, hasFavorite, listFavorites, removeFavorite } from '~/entities/favorites';
+import { addFavorite, hasFavorite, removeFavorite } from '~/entities/favorites';
 import { failure, success, type ServerTaskResult } from '~/lib/taskResult';
 import { loadCached } from '~/tasks/loadCached';
 import { mapShow } from '~/tvmaze/mapShow';
 import { tvmaze } from '~/tvmaze/tvmaze';
+import { listNewestFirst } from './listNewestFirst';
 import { requireUser } from './requireUser';
 
 /**
@@ -21,12 +22,12 @@ export const toggleFavorite = async (
 
     const removed = hasFavorite(owner, id) ? removeFavorite(owner, id) : undefined;
     if (removed) {
-      return success({ show: removed, isFavorite: false, favorites: listFavorites(owner) });
+      return success({ show: removed, isFavorite: false, favorites: listNewestFirst(owner) });
     }
 
     const show = mapShow(await loadCached(`show:${id}`, () => tvmaze.shows.get(id)));
     addFavorite(owner, show);
-    return success({ show, isFavorite: true, favorites: listFavorites(owner) });
+    return success({ show, isFavorite: true, favorites: listNewestFirst(owner) });
   } catch (error) {
     return failure(error);
   }

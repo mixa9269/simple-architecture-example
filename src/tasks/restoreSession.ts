@@ -9,6 +9,6 @@ import { readSavedEmail } from './savedSession';
  */
 export const restoreSession = (): TaskResult<string | null> => {
   const email = readSavedEmail();
-  if (email) store.dispatch(sessionStarted(email));
+  if (email) store.dispatch(sessionStarted({ email }));
   return success(email);
 };
