@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FOREST_SHOWS,
@@ -8,11 +8,11 @@ import {
   names,
   stubShowsApi,
 } from './searchTestUtils';
+import { renderHookInRouter } from '~/testUtils/storeTestUtils';
 import { usePresenter } from './usePresenter';
 
 beforeEach(() => {
   vi.useFakeTimers();
-  window.history.replaceState(null, '', '/');
   stubShowsApi({ forest: FOREST_SHOWS, pine: PINE_SHOWS });
 });
 
@@ -23,7 +23,7 @@ afterEach(() => {
 
 describe('ShowsExplorer usePresenter — props for the children', () => {
   it('hides chips and pagination until there are results; skeletons only without results', async () => {
-    const { result } = renderHook(() => usePresenter());
+    const { result } = renderHookInRouter(() => usePresenter());
     expect(result.current).toMatchObject({ genreChips: null, pagination: null });
 
     act(() => result.current.searchInput.onChange('forest'));
@@ -37,7 +37,7 @@ describe('ShowsExplorer usePresenter — props for the children', () => {
   });
 
   it('moves the chip and the page at once and keeps the list while the server answers', async () => {
-    const { result } = renderHook(() => usePresenter());
+    const { result } = renderHookInRouter(() => usePresenter());
     act(() => result.current.searchInput.onChange('forest'));
     await flushDebounce();
 
@@ -55,7 +55,7 @@ describe('ShowsExplorer usePresenter — props for the children', () => {
   });
 
   it('shows the hidden pagination for a single page and clears everything on clear', async () => {
-    const { result } = renderHook(() => usePresenter());
+    const { result } = renderHookInRouter(() => usePresenter());
     act(() => result.current.searchInput.onChange('pine'));
     await flushDebounce();
     expect(result.current.pagination).toBeNull();

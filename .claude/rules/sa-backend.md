@@ -34,12 +34,19 @@ shared/
   });
   ```
 
-  `sendResult` sends `data` as JSON, or maps the error kind to a status: `bad-request` 400, `not-found` 404, `unavailable` 502, `unexpected` 500. A JSON fallback error handler in `app.ts` catches only bugs.
+  `sendResult` sends `data` as JSON, or maps the error kind to a status: `bad-request` 400, `unauthorized` 401, `not-found` 404, `unavailable` 502, `unexpected` 500. A JSON fallback error handler in `app.ts` catches only bugs.
 - **Tasks** hold the business rules: caching to save calls to an external API, filtering, pagination, what may be added or removed. They follow `sa-tasks-layer.md`: arrow functions, `try { await externalApi.items.get(id) } catch (error) { return failure(error) }`, and they return `{ ok, data }` / `{ ok: false, error: TaskError }`. `failure` logs and names the **kind** of failure, not an HTTP status. **They never import `express`/`cors`**. They don't know they are behind HTTP (ESLint `simple-architecture/server-tasks`).
 - **The cache** is a business rule, so it is an inner helper task, not part of the API object: `loadCached('item:' + id, () => externalApi.items.get(id))`.
 - **Entities** are module-level objects (e.g. `const cache = {}`) with small read/write functions. No database yet: the data lives in the server's memory and is gone after a restart. Tests-only `clearX()` functions reset them.
 - **External APIs** go through an API object (see `sa-api-layer.md`) over its own transport. Raw API objects are mapped to our types before they leave `tasks/`.
 - Time-based rules take `Date.now()` in the task and store timestamps in the entity, so tests can use fake timers.
+
+## Users and identity
+
+- **Login** (`POST /api/login { email }`) is a task: normalize the email (trim + lowercase), check its format (`badRequest`), register the user in `entities/users` (`const users = {}`). No password, no sign-up: the first login creates the user, the next ones find them.
+- **Identity of a request** comes from a header (`X-User-Email`); parsing it is HTTP, so it is a route helper (`parseUserEmail(req)` → `string | null`).
+- **"Is this user logged in?"** is a business rule, so it is a task: an inner helper `requireUser(email)` returns `unauthorized(…)` for a missing or unknown email; routes map the kind `unauthorized` to **401**.
+- **User data is keyed by the user** in the entity (`favorite[email][showId]`), and every task works on `requireUser`'s email only. Logging out is the client forgetting the email; the data stays for the next login.
 
 ## Dependency direction
 

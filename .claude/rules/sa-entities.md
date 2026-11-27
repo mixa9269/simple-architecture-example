@@ -17,7 +17,7 @@ The whole app depends on the store (see `sa-dependencies.md`), so it is the **mo
 
 ## Only global data
 
-The store is for information the **whole app** needs — the lecture's example is the current user (avatar in the header, name in the order, …). Ours is the **favorites**: the star on every card and the counter in the header, in unrelated parts of the UI.
+The store is for information the **whole app** needs — the lecture's example is the current user (avatar in the header, name in the order, …). Ours are exactly that: the **session** (the logged-in email: header, stars, favorites requests) and the user's **favorites** (the star on every card and the counter in the header) — read in unrelated parts of the UI.
 
 Test: *would two independent screens or features read it?* If not, it does not go to the store.
 
@@ -55,6 +55,14 @@ src/entities/
 - Derived values are selectors, wrapping pure functions kept in the entity folder; `createSelector` when the result is a new object or array.
 - Entities import nothing above them: no React, no components, no tasks, no API (ESLint `deps-entities`).
 - If the server owns the data (favorites), the store is only its **mirror**: the server decides, its answer replaces the slice.
+
+## The session
+
+The logged-in user is the textbook global entity (`entities/session/`: `email | null`, `sessionStarted`, `sessionEnded`, `selectIsLoggedIn`).
+
+- **Surviving a reload**: the email is saved through `lib/storage` (a localStorage wrapper) by the login task, and a global task `restoreSession()` is called once from `main.tsx` **before the first render** — so the UI never flashes "Log in" for a logged-in user.
+- **Logout** is a task too (`src/tasks/logOut.ts`): forget the saved email, `sessionEnded()`, and clear the user's data in the store (`favoritesReceived([])`). Data that belongs to the user lives on the server and comes back with the next login.
+- The store never decides *who* may do what — that is the server's rule; the client only mirrors who is logged in.
 
 ## Who uses the store how
 

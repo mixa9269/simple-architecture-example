@@ -1,0 +1,11 @@
+.bar {
+  min-height: 2.25rem;
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.email {
+  overflow: hidden;
+  max-width: 16rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
+import { authRoutes } from './routes/authRoutes';
 import { favoritesRoutes } from './routes/favoritesRoutes';
 import { showsRoutes } from './routes/showsRoutes';
 
@@ -18,6 +19,7 @@ export function createApp() {
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true });
   });
+  app.use('/api/login', authRoutes);
   app.use('/api/shows', showsRoutes);
   app.use('/api/favorites', favoritesRoutes);
 

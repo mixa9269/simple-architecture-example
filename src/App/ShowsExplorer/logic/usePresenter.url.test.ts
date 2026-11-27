@@ -1,12 +1,10 @@
-import { act, renderHook } from '@testing-library/react';
+import { act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FOREST_SHOWS, flushDebounce, flushRequests, names, stubShowsApi } from './searchTestUtils';
+import { renderHookInRouter } from '~/testUtils/storeTestUtils';
 import { usePresenter } from './usePresenter';
 
-const render = (url: string) => {
-  window.history.replaceState(null, '', url);
-  return renderHook(() => usePresenter());
-};
+const render = (url: string) => renderHookInRouter(() => usePresenter(), url);
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -16,21 +14,20 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
-  window.history.replaceState(null, '', '/');
 });
 
 describe('ShowsExplorer usePresenter — URL state', () => {
   it('opens the search from the URL and keeps the URL while it loads', async () => {
     const { result } = render('/?q=forest&genre=Drama&page=2');
     expect(result.current.searchInput.value).toBe('forest');
-    expect(window.location.search).toBe('?q=forest&genre=Drama&page=2');
+    expect(result.current.location.search).toBe('?q=forest&genre=Drama&page=2');
 
     await flushRequests();
 
     expect(result.current.genreChips?.selectedGenre).toBe('Drama');
     expect(result.current.pagination?.value).toBe(2);
     expect(names(result.current.showsList.shows)).toEqual(['Forest 4', 'Forest 5']);
-    expect(window.location.search).toBe('?q=forest&genre=Drama&page=2');
+    expect(result.current.location.search).toBe('?q=forest&genre=Drama&page=2');
   });
 
   it('writes what the server applied: an unknown genre and a page out of range are dropped', async () => {
@@ -39,24 +36,24 @@ describe('ShowsExplorer usePresenter — URL state', () => {
     await flushRequests();
 
     expect(result.current.genreChips?.selectedGenre).toBeNull();
-    expect(window.location.search).toBe('?q=forest&page=3');
+    expect(result.current.location.search).toBe('?q=forest&page=3');
   });
 
   it('writes the settled search and clears the URL with the field', async () => {
     const { result } = render('/');
 
     act(() => result.current.searchInput.onChange('forest'));
-    expect(window.location.search).toBe('');
+    expect(result.current.location.search).toBe('');
     await flushDebounce();
-    expect(window.location.search).toBe('?q=forest');
+    expect(result.current.location.search).toBe('?q=forest');
 
     act(() => result.current.genreChips?.onChange('Drama'));
     act(() => result.current.pagination?.onChange(2));
-    expect(window.location.search).toBe('?q=forest');
+    expect(result.current.location.search).toBe('?q=forest');
     await flushRequests();
-    expect(window.location.search).toBe('?q=forest&genre=Drama&page=2');
+    expect(result.current.location.search).toBe('?q=forest&genre=Drama&page=2');
 
     act(() => result.current.searchInput.onClear());
-    expect(window.location.search).toBe('');
+    expect(result.current.location.search).toBe('');
   });
 });

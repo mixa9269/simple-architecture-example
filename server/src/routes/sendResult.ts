@@ -4,6 +4,7 @@ import type { ServerTaskResult, TaskError } from '~/lib/taskResult';
 
 const STATUS: Record<TaskError['kind'], number> = {
   'bad-request': 400,
+  unauthorized: 401,
   'not-found': 404,
   unavailable: 502,
   unexpected: 500,

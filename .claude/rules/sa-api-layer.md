@@ -30,6 +30,11 @@ export const cart = {
 };
 ```
 
+## Identity and errors
+
+- **The API layer doesn't know who is logged in** — it must not read the store (`deps-api`). A task reads the user from the store and passes it in explicitly: `api.favorites.list(user, signal)`; the transport sends it (here as `X-User-Email`). The dependency stays one-way: task → store, task → API.
+- **`callApi` throws `HttpError`** (`status` + the server's message) for a non-2xx answer. It is re-exported from `~/api/api`, so tasks can branch on it without touching the transport: `if (error instanceof HttpError && error.status === 401) logOut()`.
+
 ## Server: an external API
 
 The same shape for an external API the server calls: one folder per API (in this repo `server/src/tvmaze/`) with an API object (`tvmaze.shows.get(id)`) over its own transport. Caching is a business rule, so it is **not** in the API object: a task wraps the call (`loadCached(key, () => tvmaze.shows.get(id))`).

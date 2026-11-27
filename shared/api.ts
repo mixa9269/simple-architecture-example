@@ -52,6 +52,21 @@ export interface ToggleFavoriteAnswer {
   favorites: Show[];
 }
 
+/** A logged-in user; the email is the identity (sent as `X-User-Email`). */
+export interface User {
+  email: string;
+}
+
+/** POST /api/login */
+export interface LoginRequest {
+  email: string;
+}
+
+/** Answer of POST /api/login: the normalized email. */
+export interface LoginAnswer {
+  user: User;
+}
+
 /** Body of any non-2xx answer. */
 export interface ApiError {
   error: string;

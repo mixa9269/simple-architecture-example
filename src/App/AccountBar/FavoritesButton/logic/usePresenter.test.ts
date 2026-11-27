@@ -2,12 +2,14 @@ import { notifications } from '@mantine/notifications';
 import { act, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { errorResponse, makeShow, okResponse } from '~/testUtils/fixtures';
-import { renderHookWithStore, setFavorites } from '~/testUtils/storeTestUtils';
+import { store } from '~/entities/store';
+import { renderHookWithStore, setFavorites, setSession } from '~/testUtils/storeTestUtils';
 import { usePresenter } from './usePresenter';
 
 vi.mock('@mantine/notifications', () => ({ notifications: { show: vi.fn() } }));
 
 beforeEach(() => {
+  setSession('ann@mail.com');
   setFavorites([]);
   vi.mocked(notifications.show).mockClear();
 });
@@ -19,7 +21,9 @@ afterEach(() => {
 describe('FavoritesButton usePresenter', () => {
   it('loads the favorites from the server on mount and counts them', async () => {
     const shows = [makeShow({ id: 1 }), makeShow({ id: 2 })];
-    const fetchMock = vi.fn<(url: string) => Promise<Response>>(async () => okResponse({ shows }));
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () =>
+      okResponse({ shows }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const { result } = renderHookWithStore(() => usePresenter());
@@ -28,6 +32,7 @@ describe('FavoritesButton usePresenter', () => {
     await waitFor(() => expect(result.current.count).toBe(2));
     expect(result.current.label).toBe('Favorites: 2 shows');
     expect(fetchMock.mock.calls[0][0]).toBe('/api/favorites');
+    expect(fetchMock.mock.calls[0][1]?.headers).toEqual({ 'X-User-Email': 'ann@mail.com' });
   });
 
   it('opens and closes the list', () => {
@@ -53,5 +58,15 @@ describe('FavoritesButton usePresenter', () => {
     );
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  it('ends the session when the server no longer knows the user', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubGlobal('fetch', vi.fn(async () => errorResponse(401)));
+
+    renderHookWithStore(() => usePresenter());
+
+    await waitFor(() => expect(store.getState().session.email).toBeNull());
+    vi.restoreAllMocks();
   });
 });

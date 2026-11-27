@@ -12,7 +12,7 @@ A component **with logic** has a `logic/usePresenter.ts` hook (see `sa-logic-fol
 |---|---|
 | UI state: field value, loading/pending, opened drawer | the use case: what to send, what to store |
 | handlers: `onAddToCart`, `onPageChange` | `addToCart(id)`, `loadProducts(params, signal)` |
-| toasts, navigation, focus (they depend on the environment) | returns `{ ok, data }` / `{ ok: false, error }`; no React, no Mantine |
+| toasts, navigation (`useNavigate`, see `sa-routing.md`), focus (they depend on the environment) | returns `{ ok, data }` / `{ ok: false, error }`; no React, no Mantine |
 | branches on `result.ok` | catches and logs its own errors |
 | keeps the screen's data from tasks (`useState`); reads global data (`useSelector`) | returns data; writes the store only for global data (`store.dispatch`) |
 

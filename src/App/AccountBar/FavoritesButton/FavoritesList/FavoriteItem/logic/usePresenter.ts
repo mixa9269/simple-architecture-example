@@ -1,4 +1,4 @@
-import type { Props } from '~/App/FavoritesButton/FavoritesList/FavoriteItem/types';
+import type { Props } from '~/App/AccountBar/FavoritesButton/FavoritesList/FavoriteItem/types';
 
 export function usePresenter(props: Props) {
   const { show } = props;

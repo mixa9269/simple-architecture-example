@@ -24,18 +24,27 @@ Homework #2 (fullstack):
 - in the favorites list an unstarred show stays (with an empty star) until the list is reopened, so a misclick can be undone
 - when the free Render backend is waking up (an answer takes longer than 3 s), the search says so instead of looking frozen
 
-Stack: Vite, React, TypeScript, [Mantine](https://mantine.dev) (+ notifications), Redux Toolkit, CSS Modules, Express, Vitest.
+Homework #3 (authentication & personal favorites):
+
+- a **login page** (`#/login`) with one field, email — no password, no sign-up; the backend checks and normalizes the email (`POST /api/login`)
+- the header shows the logged-in **email** and a **Log out** button; the session survives a reload (the email is saved on the device)
+- **personal favorites**: kept on the server per user (`favorite[email][showId]`, plain objects in memory); logging out and back in with the same email brings them back
+- a **guest** can search and browse; a star shows a toast and leads to the login page, and after login the user comes back to the same search
+- routing with `react-router` (`HashRouter`, so a reload works on GitHub Pages); navigation lives in presenters
+
+Stack: Vite, React, TypeScript, [Mantine](https://mantine.dev) (+ notifications), Redux Toolkit, React Router, CSS Modules, Express, Vitest.
 
 ## API
 
 | Method | Path | Answer |
 |---|---|---|
 | GET | `/api/shows?q=&genre=&page=` | `ShowsPage`: one page of results, applied genre/page, all genres, counts |
-| GET | `/api/favorites` | `{ shows }`, newest first |
+| POST | `/api/login` `{ email }` | `{ user: { email } }` (normalized); 400 for an invalid email |
+| GET | `/api/favorites` | `{ shows }` of the user, newest first |
 | POST | `/api/favorites/:id/toggle` | `{ show, isFavorite, favorites }` |
 | GET | `/api/health` | `{ ok: true }` |
 
-The contract types are in [`shared/api.ts`](shared/api.ts). The data lives in the server's memory: a restart clears the cache and the favorites.
+Favorites requests identify the user by the `X-User-Email` header; an email that has not logged in gets **401**. The contract types are in [`shared/api.ts`](shared/api.ts). The data lives in the server's memory: a restart clears the cache, the users and the favorites (the app then asks to log in again).
 
 ## Run
 
@@ -67,7 +76,8 @@ Architecture rules for Claude Code live in [`.claude/rules`](.claude/rules):
 - Servers are called through an API object: `api.shows.search()`, `api.favorites.toggle(id)` (`tvmaze.shows.get(id)` on the server)
 - A task is a verb-named arrow function: `try { await api.x.y() } catch (error) { console.error }`, returning `{ ok, data }` / `{ ok: false, error }`; no React, no Mantine; writes the store via `store.dispatch`. The presenter branches on `result.ok`; toasts and navigation stay in the presenter
 - Direction of dependencies: View → Presenter → Tasks → Store, code that changes often depends on code that changes rarely, no import cycles; layers talk through contracts (the presenter designs what it wants from a task, the View what it wants from its presenter)
-- Store = global data only (favorites), get/set, no logic; loading, errors and a screen's data stay in its presenter
+- Routing: pages are route components, navigation and URL state only in presenters, tasks never navigate
+- Store = global data only (the session and the favorites), get/set, no logic; loading, errors and a screen's data stay in its presenter
 - Backend: thin Express routes → tasks (no `express` imports) → in-memory entities. Data rules live on the server, presentation on the client
 - No `setState` during render; requests are objects in state, cancelled with `AbortController`
 - `types.ts` with `Props` next to each component; imports outside the own folder via `~/`, never `../`

@@ -51,6 +51,8 @@ const REACT_AND_UI = (why) => [
   banPath('react', why),
   banPath('react-dom', why),
   banPath('react-redux', why),
+  // Navigation depends on the environment: it belongs to presenters (see sa-routing.md).
+  banPath('react-router', why),
 ];
 const MANTINE = (why) => ({ group: ['@mantine/*'], message: `Simple Architecture: ${why} (${DEPS}).` });
 

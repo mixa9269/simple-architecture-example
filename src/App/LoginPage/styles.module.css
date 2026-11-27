@@ -1,0 +1,6 @@
+.card {
+  max-width: 26rem;
+  margin-inline: auto;
+  background-color: var(--app-card-bg);
+  border: 1px solid var(--app-card-border);
+}

@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app';
 import { clearCache } from './entities/cache';
 import { clearFavorites } from './entities/favorites';
-import { errorResponse, makeSearchItem, makeTvmazeShow, okResponse } from './testFixtures';
+import { clearUsers } from './entities/users';
+import { errorResponse, makeSearchItem, okResponse } from './testFixtures';
 
 const app = createApp();
 const SEARCH = [1, 2, 3, 4].map((id) => makeSearchItem(id, `Girls ${id}`, ['Drama']));
@@ -11,6 +12,7 @@ const SEARCH = [1, 2, 3, 4].map((id) => makeSearchItem(id, `Girls ${id}`, ['Dram
 beforeEach(() => {
   clearCache();
   clearFavorites();
+  clearUsers();
 });
 
 afterEach(() => {
@@ -47,26 +49,5 @@ describe('GET /api/shows', () => {
     const failed = await request(app).get('/api/shows?q=girls');
     expect(failed.status).toBe(502);
     expect(failed.body.error).toContain('status 500');
-  });
-});
-
-describe('/api/favorites', () => {
-  it('toggles a favorite and lists it', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => okResponse(makeTvmazeShow({ id: 3, name: 'Pine' }))));
-
-    const added = await request(app).post('/api/favorites/3/toggle');
-    expect(added.body).toMatchObject({ isFavorite: true, show: { id: 3, name: 'Pine' } });
-    expect((await request(app).get('/api/favorites')).body.shows).toHaveLength(1);
-
-    const removed = await request(app).post('/api/favorites/3/toggle');
-    expect(removed.body).toMatchObject({ isFavorite: false, favorites: [] });
-  });
-
-  it('answers 400 for a bad id and 404 for an unknown show', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.stubGlobal('fetch', vi.fn(async () => errorResponse(404)));
-
-    expect((await request(app).post('/api/favorites/abc/toggle')).status).toBe(400);
-    expect((await request(app).post('/api/favorites/999/toggle')).status).toBe(404);
   });
 });

@@ -70,6 +70,10 @@ The arrows above are imports, but the layers are kept loose by **contracts** —
 
 Contracts also help reading, like links in Wikipedia: `await loadHomePageVideos()` is one line that says what happens; follow the "link" into the task only when *how* matters for your change.
 
+## Identity goes down as a parameter
+
+Who is logged in is global data (the store). Lower layers that need it — the API object, the transport — **get it as a parameter** from the task (`api.favorites.list(user, signal)`), never by importing the store upwards. The same for navigation: tasks report, presenters navigate (`sa-routing.md`).
+
 ## When you add code
 
 1. Which side will change more often? That side imports the other.

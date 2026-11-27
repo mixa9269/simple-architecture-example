@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import type { Show } from '~shared/api';
 import type { Props as GenreChipsProps } from '~/App/ShowsExplorer/GenreChips/types';
 import type { Props as ResultsStatusProps } from '~/App/ShowsExplorer/ResultsStatus/types';
@@ -12,7 +13,8 @@ const NO_SHOWS: Show[] = [];
 
 /** Owns the search; hands every child exactly the props its contract asks for. */
 export function usePresenter() {
-  const [initial] = useState(() => readSearchUrl(window.location.search));
+  const [searchParams] = useSearchParams();
+  const [initial] = useState(() => readSearchUrl(searchParams.toString()));
   const search = useShowsSearch(initial);
   const { page, params, isFetching, status } = search;
   const typed = search.query.trim();

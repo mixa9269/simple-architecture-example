@@ -4,7 +4,7 @@ import { TvmazeError } from '~/tvmaze/requestTvmaze';
 
 /** Why a task failed; routes turn the kind into an HTTP status (routes/sendResult.ts). */
 export interface TaskError {
-  kind: 'bad-request' | 'not-found' | 'unavailable' | 'unexpected';
+  kind: 'bad-request' | 'unauthorized' | 'not-found' | 'unavailable' | 'unexpected';
   message: string;
 }
 
@@ -17,6 +17,12 @@ export const success = <T>(data: T): ServerTaskResult<T> => ({ ok: true, data })
 export const badRequest = (message: string): ServerTaskResult<never> => ({
   ok: false,
   error: { kind: 'bad-request', message },
+});
+
+/** No logged-in user: the client must log in first. Not logged, it is not our failure. */
+export const unauthorized = (message: string): ServerTaskResult<never> => ({
+  ok: false,
+  error: { kind: 'unauthorized', message },
 });
 
 /** A task failed: `return failure(error)` in its `catch`. Logs the error and names its kind. */

@@ -61,6 +61,21 @@ notifications.show(result.ok ? getAddedToast(result.data) : getErrorToast(result
 
 **Entry tasks** (called by a presenter or a route) return a result. **Inner helper tasks**, called only by other tasks (e.g. a caching helper on the server), may throw: the entry task's `catch` handles it.
 
+## Session-aware tasks
+
+- A task that acts **for the user** reads the identity from the store (`store.getState().session.email`) and passes it to the API. Without a user it doesn't call the server: it returns a result ("Log in to add favorites"), and the **presenter** decides what to do (toast + go to the login page).
+- **401** means the server no longer knows the user (e.g. after a restart): the task ends the session (`logOut()`) and reports "Please log in again".
+- App-wide tasks live in `src/tasks/` (`restoreSession`, `logOut`): called from several places (`main.tsx`, the account bar, the favorites tasks).
+
+```ts
+// src/tasks/restoreSession.ts — global task, called once from main.tsx before the first render
+export const restoreSession = (): TaskResult<string | null> => {
+  const email = readSavedEmail();
+  if (email) store.dispatch(sessionStarted(email));
+  return success(email);
+};
+```
+
 ## What a task may use
 
 - The **API object**: `api.*` on the frontend, the external-API object (e.g. `tvmaze.*`) on the server.
@@ -73,7 +88,8 @@ notifications.show(result.ok ? getAddedToast(result.data) : getErrorToast(result
 - **No React**: no hooks, no JSX, no `react`/`react-dom`/`react-redux` imports. A task would survive moving to another UI library.
 - **No UI library**: no `@mantine/*`. **Toasts, navigation, focus** depend on the environment, so they belong to the presenter. The task returns what happened and the presenter decides how to show it.
 - **No UI state**: loading/disabled flags stay local in the presenter (`useState`). You can `await` a task, so the presenter knows when it finished.
-- **No transport**: no `fetch`, no `callApi`/`requestTvmaze`. Only the API object.
+- **No transport**: no `fetch`, no `callApi`/`requestTvmaze`. Only the API object (and `HttpError` from it).
+- **No navigation**: no `react-router`. A task returns what happened; the presenter navigates (see `sa-routing.md`).
 - **No imports from display**: no presenters or hooks (`use*`), no Views, nothing from a component's `logic/` — display depends on tasks, not the other way round (see `sa-dependencies.md`). A task that needs a value from the presenter gets it as a parameter.
 
 ESLint (`simple-architecture/tasks`, `server-tasks`, `deps-tasks`, `deps-server-tasks`): React/Mantine imports, display modules, `fetch`, the transports and `function` exports are errors in tasks folders.

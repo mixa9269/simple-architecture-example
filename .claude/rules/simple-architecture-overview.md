@@ -8,7 +8,7 @@ This project follows **Simple Architecture**, a React architecture inspired by *
 | **I** | Interactor = use case = **Task** | plain verb-named functions in `logic/tasks/` (or `src/tasks/` when reused); the business logic |
 | **P** | Presenter | `logic/usePresenter.ts` + hooks: calls tasks, keeps the screen's data from them, UI state, handlers, toasts/navigation |
 | **E** | Entity | the Redux Toolkit store in `src/entities/`: global data only, get/set |
-| **R** | Router | navigation is environment-specific, so it stays in the presenter (no own layer) |
+| **R** | Router | `react-router` (`HashRouter`): pages are route components; navigation and URL state are environment-specific, so they stay in the presenter layer (no own layer) |
 
 The app has its own **backend** (`server/`, Express) with the same idea: thin routes → tasks → in-memory entities.
 
@@ -23,12 +23,13 @@ main.tsx → View → Presenter → Tasks → Store        Tasks → api.* → c
 | Rule | File |
 |---|---|
 | Direction of dependencies: often-changed code depends on rarely-changed code; View → Presenter → Tasks → Store; no cycles; contracts between layers (dependency inversion); per-layer import bans | `sa-dependencies.md` |
+| Routing: pages as route components under `App/`, `HashRouter`; `useNavigate` / `useLocation` / `useSearchParams` only in the presenter layer; tasks never navigate | `sa-routing.md` |
 | A component is View only: JSX + `usePresenter(props)`; no logic → no presenter, texts right in JSX | `sa-view-layer.md` |
 | The presenter is the bridge between the View and the tasks: calls tasks, keeps their data in `useState` and passes it down as props, returns ready-to-render values; reads only global data from the store; takes props whole; no `setState` in render | `sa-presenter-layer.md` |
 | All JS logic of a component lives in its `logic/` folder; tasks in `logic/tasks/` | `sa-logic-folder.md` |
 | A task = verb-named arrow function with a contract designed by its caller: `try { await api.x.y() } catch { log }` → returns `{ ok, data \| error }`; no React, no UI library, no display imports; writes the store only for global data | `sa-tasks-layer.md` |
 | Servers are called through an API object `api.<domain>.<method>()` (`tvmaze.*` on the server): thin typed arrows, only tasks call it | `sa-api-layer.md` |
-| Entities = Redux Toolkit store for global data only (favorites), get/set, no logic; minimize what is stored and who reads it; loading, errors and a screen's data stay in its presenter | `sa-entities.md` |
+| Entities = Redux Toolkit store for global data only (the session and the favorites), get/set, no logic; minimize what is stored and who reads it; loading, errors and a screen's data stay in its presenter | `sa-entities.md` |
 | Backend: thin Express routes, tasks without `express`, `const cache = {}` / `const favorite = {}` entities; data rules on the server, presentation on the client | `sa-backend.md` |
 | Max **120 lines** per file (ESLint `max-lines`), frontend and backend | `sa-file-size-120.md` |
 | Each component has its own folder (View, `types.ts` with `Props`, `*.module.css`, `logic/`); single-use children nest inside the parent; folders mirror the UI | `sa-component-tree.md` |
@@ -56,7 +57,7 @@ The rules describe patterns; the code itself is the map. Read the folders instea
 - `shared/` — types both sides share: the API contract and `TaskResult`.
 - `eslint/` — the enforced part of these rules.
 
-Reference implementations worth copying: a screen that owns its data — `src/App/ShowsExplorer/logic/`; global data with a task writing the store — the favorites (`src/entities/favorites/`, `FavoriteStar`).
+Reference implementations worth copying: a screen that owns its data — `src/App/ShowsExplorer/logic/`; global data with a task writing the store — the favorites (`src/entities/favorites/`, `FavoriteStar`); the session and a page with redirects — `src/entities/session/`, `src/tasks/`, `src/App/LoginPage/`.
 
 Tests (Vitest) live next to the code they cover: pure functions, hooks and presenters (`renderHook`), tasks with a stubbed `fetch`. No tests of Mantine rendering. Two Vitest projects: `web` (jsdom, `src/`) and `server` (node, `server/`).
 
