@@ -59,6 +59,16 @@ describe('LoginPage usePresenter', () => {
     expect(selectUserEmail(store.getState())).toBeNull();
   });
 
+  it('lets a guest go back to the page that sent them here, or home', () => {
+    const { result } = renderHookInRouter(() => usePresenter(), '/login', { from: '/?q=dark' });
+    act(() => result.current.onSkip());
+    expect(`${result.current.location.pathname}${result.current.location.search}`).toBe('/?q=dark');
+
+    const direct = renderHookInRouter(() => usePresenter(), '/login');
+    act(() => direct.result.current.onSkip());
+    expect(direct.result.current.location.pathname).toBe('/');
+  });
+
   it('leaves the page at once for a user who is already logged in', () => {
     setSession('ann@mail.com');
     const { result } = renderHookInRouter(() => usePresenter(), '/login');

@@ -4,7 +4,7 @@ import { usePresenter } from './logic/usePresenter';
 import styles from './styles.module.css';
 
 export function LoginPage() {
-  const { redirectTo, email, error, isPending, canSubmit, onEmailChange, onSubmit } =
+  const { redirectTo, email, error, isPending, canSubmit, onEmailChange, onSubmit, onSkip } =
     usePresenter();
 
   if (redirectTo) return <Navigate to={redirectTo} replace />;
@@ -30,6 +30,15 @@ export function LoginPage() {
         />
         <Button type="submit" radius="xl" loading={isPending} disabled={!canSubmit}>
           Log in
+        </Button>
+        <Button
+          variant="subtle"
+          color="gray"
+          radius="xl"
+          classNames={{ root: styles.skip, label: styles.skipLabel }}
+          onClick={onSkip}
+        >
+          Continue without logging in
         </Button>
       </Stack>
     </Paper>

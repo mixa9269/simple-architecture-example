@@ -4,3 +4,14 @@
   background-color: var(--app-card-bg);
   border: 1px solid var(--app-card-border);
 }
+
+/* A secondary action: quieter than "Log in" even while that one is disabled.
+   Mantine sets the button's color inline, so the label is colored instead. */
+.skipLabel {
+  color: var(--mantine-color-dimmed);
+  transition: color 150ms ease;
+}
+
+.skip:hover .skipLabel {
+  color: var(--mantine-color-text);
+}
